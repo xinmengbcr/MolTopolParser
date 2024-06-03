@@ -1,10 +1,11 @@
 """ Test for moltopolparser.gmx module """
 
+from typing import List
+
 import pytest
 from pydantic import ValidationError
-from moltopolparser.gmx import GroFileAtom
-from moltopolparser.gmx import parse_gro_file
-from typing import List
+
+from moltopolparser.gmx import GroFileAtom, parse_gro_file
 
 
 def test_parse_gro_atom():

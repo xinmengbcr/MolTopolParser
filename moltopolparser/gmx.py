@@ -59,7 +59,6 @@ class GroFile(BaseModel):
     box_size: list[float] = Field(..., description="Box size")
 
 
-
 def parse_gro_file(input_file):
     """
     Parse a Gromacs .gro file and return a GroFile class instance.
@@ -90,7 +89,7 @@ def parse_gro_file(input_file):
         atom_data = {
             "resid": int(line[:5]),
             "resname": line[5:10].strip(),
-            "atom_name":line[10:15].strip(),
+            "atom_name": line[10:15].strip(),
             "index": int(line[15:20]),
             "x": float(line[20:28]),
             "y": float(line[28:36]),
@@ -107,8 +106,8 @@ def parse_gro_file(input_file):
                 f"Gro file line not formatted correctly:\n"
                 f"{line}"
                 "The line lenght is {line_length} "
-                "while it should be 45 for a gro file containing positions only "
-                "or 69 for a gro file containing both positions and velocities."
+                "while it should be 45 for a gro file containing positions"
+                "or 69 containing both positions and velocities."
             )
     return GroFile(
         sys_name=lines[0].strip("\n"),
