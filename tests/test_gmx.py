@@ -5,7 +5,7 @@ from typing import List
 import pytest
 from pydantic import ValidationError
 
-from moltopolparser.gmx import GroFileAtom, parse_gro_file
+from moltopolparser.gmx import GroFileAtom, parse_gro_file, parse_top_file_shallow
 
 
 def test_parse_gro_atom():
@@ -112,3 +112,11 @@ def test_parse_gro_file():
         else:
             raise TypeError("gro_atoms is not a list")
 
+
+def test_parse_top_file_shallow():
+    """
+    Test case for parsing a GROMACS topology file.
+    Currently only tested on Martini 2 topologies from the Charmmgui server.
+    """
+    input_file = './tests/data/gmx/membrane-martini-charmmgui/system.top'
+    parse_top_file_shallow(input_file)

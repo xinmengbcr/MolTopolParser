@@ -1,0 +1,15 @@
+[system]
+molecules = [
+    ["DOPC", 60],
+    ["DPPC", 20],
+    ["W", 845],
+    ["NA", 9],
+    ["CL", 9],
+]
+include = [
+    "./DOPC.toml",
+    "./DPPC.toml",
+    "./W.toml",
+    "./NA.toml",
+    "./CL.toml",
+]
