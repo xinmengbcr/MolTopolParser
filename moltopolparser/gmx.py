@@ -143,16 +143,16 @@ class MolForceFieldBondtypes(BaseModel):
     Note:
     - only AmberFF is tested.
     """
-    i: str = Field(..., description="First atom type")
-    j: str = Field(..., description="Second atom type")
+    ai: str = Field(..., description="First atom type")
+    aj: str = Field(..., description="Second atom type")
     func: int = Field(..., description="Function type")
     b0: float = Field(..., description="Equilibrium bond length")
     kb: float = Field(..., description="Bond force constant")
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "i": "C",
-                "j": "C",
+                "ai": "C",
+                "aj": "C",
                 "func": 1,
                 "b0": 0.1525,
                 "kb": 259408.0,
@@ -171,8 +171,8 @@ class MolForceFieldAngletypes(BaseModel):
     HW  OW  HW           1   104.520    836.800 ; TIP3P water
     --------
     """
-    i: str = Field(..., description="First atom type")
-    j: str = Field(..., description="Second atom type")
+    ai: str = Field(..., description="First atom type")
+    aj: str = Field(..., description="Second atom type")
     k: str = Field(..., description="Third atom type")
     func: int = Field(..., description="Function type")
     th0: float = Field(..., description="Equilibrium angle")
@@ -180,8 +180,8 @@ class MolForceFieldAngletypes(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "i": "HW",
-                "j": "OW",
+                "ai": "HW",
+                "aj": "OW",
                 "k": "HW",
                 "func": 1,
                 "th0": 104.520,
@@ -194,12 +194,28 @@ class MolForceFieldAngletypes(BaseModel):
 class MolForceFieldDihedraltypes(BaseModel):
     """
     section [ dihedrals ] in the itp file
-    example AA (amber), func=3:
+    example amber , func=4:
+    -------- 
+    [ dihedraltypes ]
+    ;i  j   k  l     func      phase      kd      pn
+    CA  CA  CA  OH       4      180.00     4.60240     2    ; new99
+    --------
+    example amber, func=9:
     --------
     [ dihedraltypes ]
+    ;i   j   k   l     func
+    CT  CT  OS  CT    9       0.0      1.60247     3  ;
+    --------
+    example opls, func=3:
+    --------
+    [ dihedraltypes ]
+    ;  i    j    k    l   func     coefficients
+    Br     C      CB     CT      3      0.00000   0.00000   0.00000   0.00000   0.00000   0.00000 ; acyl halide
+    --------
     """
 
-    pass
+
+    
 
 
 class MolForceField(BaseModel):
@@ -421,8 +437,8 @@ class Topology(BaseModel):
     include_itps: Optional[List[str]] = Field(..., description="Include files")
     molecule_topologies: Optional[List[MolTop]] = \
         Field(..., description="Molecule topology")
-    ff_atomtypes: Optional[List[str]] = Field(
-        ..., description="Atom types in force field")
+    # ff_atomtypes: Optional[List[str]] = Field(
+    #     ..., description="Atom types in force field")
     
     # atomtypes: Optional[List[str]] = Field(..., description="Atom types")
 
@@ -561,7 +577,6 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
         start, end, _, _ = find_section_range(lines, "molecules")
         data_target = lines[start+1:end] if end else lines[start+1:]
         for line in data_target:
-            print(line)
             molname, molnum = line.split()[:2]
             system_molecules.append({molname: int(molnum)})
         
@@ -575,14 +590,12 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
                 itp_paths.append(
                   f"{os.path.dirname(os.path.abspath(filename))}/{path[1:-1]}"
                 )  # strip sorrounding quotes
-        # print(itp_paths)
         # sum up the data
         top_data = {
             "system": system_name,
             "molecules": system_molecules,
             "include_itps": itp_paths,
         }
-        print(top_data)
         return top_data
 
 
