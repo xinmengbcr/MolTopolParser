@@ -6,11 +6,12 @@ import pytest
 from pydantic import ValidationError
 
 from moltopolparser.gmx import (
-    GroFileAtom,
+    GroAtom,
     parse_gro_file,
     parse_top_file,
     MolTopAtom,
     MolTopDihedral,
+    MolForceFieldDihedraltype,
 )
 
 
@@ -31,7 +32,7 @@ def test_parse_gro_atom():
         "vz": 0.0
     }
 
-    atom_instance = GroFileAtom(**example_data)
+    atom_instance = GroAtom(**example_data)
     assert atom_instance.resid == 1
     assert atom_instance.resname == "H2O"
     assert atom_instance.atom_name == "O"
@@ -58,7 +59,7 @@ def test_parse_gro_atom_novelocity():
         "z": 0.0,
     }
 
-    atom_instance = GroFileAtom(**example_data)
+    atom_instance = GroAtom(**example_data)
     assert atom_instance.resid == 1
     assert atom_instance.resname == "H2O"
     assert atom_instance.atom_name == "O"
@@ -88,7 +89,7 @@ def test_parse_gro_atom_error():
         "vz": 0.0
     }
     with pytest.raises(ValidationError):
-        GroFileAtom(**example_data_error)
+        GroAtom(**example_data_error)
 
 
 def test_parse_gro_file():
@@ -125,7 +126,11 @@ def test_parse_top_file():
     Currently only tested on Martini 2 topologies from the Charmmgui server.
     """
     input_file = './tests/data/gmx/membrane-martini-charmmgui/system.top'
-    parse_top_file(input_file)
+    sys_top = parse_top_file(input_file)
+    assert sys_top.system == "Martini system"
+    input_file = './tests/data/gmx/twolayer_include_itp/system.top'
+    sys_top = parse_top_file(input_file)
+    assert len(sys_top.include_itps) == 3
 
 
 def test_MolTopAtom():
@@ -235,6 +240,20 @@ def test_MolTopDihedral():
     assert dihedral.c0 == 11.0
     assert dihedral.c1 == 1.0
     assert dihedral.c2 == 2.0
+   
+    example_data_no_params = {
+                "ai": 10,
+                "aj": 21,
+                "ak": 30,
+                "al": 41,
+                "func": 1,
+    }
+    dihedral = MolTopDihedral(**example_data_no_params)
+    assert dihedral.ai == 10
+    assert dihedral.aj == 21
+    assert dihedral.ak == 30
+    assert dihedral.al == 41
+    assert dihedral.func == 1
 
 
     example_data_improper={
@@ -252,3 +271,65 @@ def test_MolTopDihedral():
     }
     with pytest.raises(ValidationError):
         dihedral = MolTopDihedral(**example_data_improper)
+
+
+def test_MolForceFieldDihedraltype():
+    """
+    Test MolForceFieldDihedraltype class
+    """
+    dihedral = MolForceFieldDihedraltype(
+        ai="CA",
+        aj="CA",
+        ak="CA",
+        al="OH",
+        func=4,
+        c0=180.00,
+        c1=4.60240,
+        c2=2
+        # c3 to c5 are optional
+    )
+    assert dihedral.ai == "CA"
+    assert dihedral.aj == "CA"
+    assert dihedral.ak == "CA"
+    assert dihedral.al == "OH"
+    assert dihedral.func == 4
+    assert dihedral.c0 == 180.00
+    assert dihedral.c1 == 4.60240
+    assert dihedral.c2 == 2
+    assert dihedral.c3 is None
+    
+    with pytest.raises(ValidationError):
+        MolForceFieldDihedraltype(
+            ai="CA",
+            aj="CA",
+            ak="CA",
+            al="OH",
+            func=3,
+            c0=180.00,
+            c1=4.60240,
+            # Missing c2 should raise an error
+        )
+
+    with pytest.raises(ValidationError):
+        MolForceFieldDihedraltype(
+            ai="CA",
+            aj="CA",
+            ak="CA",
+            al="OH",
+            func=4,
+            c0=180.00,
+            c1=4.60240,
+            # Missing c2 should raise an error
+        )
+    
+    with pytest.raises(ValidationError):
+        MolForceFieldDihedraltype(
+            ai="CA",
+            aj="CA",
+            ak="CA",
+            al="OH",
+            func=1, 
+            c0=180.00,
+            c1=4.60240,
+            # func 1 is not supported
+        )

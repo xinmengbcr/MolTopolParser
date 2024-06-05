@@ -1,15 +1,18 @@
 """
 This module contains the classes and functions to parse Gromacs files.
-
 """
+
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class GroFileAtom(BaseModel):
+# -----------< Base Data >----------- #
+
+
+class GroAtom(BaseModel):
     """
     Represents an atom in a Gromacs .gro file.
     Note:
@@ -47,39 +50,23 @@ class GroFileAtom(BaseModel):
     )
 
 
-class GroFile(BaseModel):
-    """
-    Represents a Gromacs .gro file.
-    sys_name: str
-    num_atoms: int
-    gro_atoms: list of GroFileAtom
-    box_size: np.array
-    """
-
-    sys_name: str = Field(..., description="System name")
-    num_atoms: int = Field(..., description="Number of atoms")
-    gro_atoms: List[GroFileAtom] = Field(..., description="List of atoms")
-    box_size: List[float] = Field(..., description="Box size")
-
-    # TBD: Add dump method to write the gro file, or convert to other formats
-
-
 class MolForceFieldDefaults(BaseModel):
-    """ section [ defaults ] in the itp file
+    """section [ defaults ] in the itp file
     example:
     --------
     ; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
     1               2               yes             0.5     0.8333
     --------
     """
+
     nbfunc: int = Field(..., description="Number of functions")
     comb_rule: int = Field(..., description="Combination rule")
     gen_pairs: Optional[str] = Field(..., description="Generate pairs")
     fudgeLJ: Optional[float] = Field(..., description="Fudge LJ")
-    fudgeQQ: Optional[float] = Field(..., description="Fudge QQ")  
+    fudgeQQ: Optional[float] = Field(..., description="Fudge QQ")
 
 
-class MolForceFieldAtomtypes(BaseModel):
+class MolForceFieldAtomtype(BaseModel):
     """
     Represents an atom type in a force field.
     example for AA (amber):
@@ -94,6 +81,7 @@ class MolForceFieldAtomtypes(BaseModel):
     P5      72.0     0.000      A     0.0         0.0
     --------
     """
+
     name: str = Field(..., description="Atom type")
     at_num: Optional[int] = Field(..., description="Atomic number")
     mass: float = Field(..., description="Atom mass")
@@ -103,8 +91,8 @@ class MolForceFieldAtomtypes(BaseModel):
     epsilon: float = Field(..., description="Epsilon")
 
 
-class MolForceFieldNonbondParams(BaseModel):
-    """ section [ nonbond_params ] in the itp file
+class MolForceFieldNonbondParam(BaseModel):
+    """section [ nonbond_params ] in the itp file
     example for CG (martini):
     --------
     [ nonbond_params ]
@@ -113,6 +101,7 @@ class MolForceFieldNonbondParams(BaseModel):
     Note:
     - only Martini 2.2 is tested.
     """
+
     ai: str = Field(..., description="First atom index")
     aj: str = Field(..., description="Second atom index")
     func: int = Field(..., description="Function type")
@@ -124,16 +113,16 @@ class MolForceFieldNonbondParams(BaseModel):
                 "ai": "P5",
                 "aj": "P5",
                 "func": 1,
-                "c6": 0.24145E-00,
-                "c12": 0.26027E-02,
+                "c6": 0.24145e-00,
+                "c12": 0.26027e-02,
             }
         }
     )
 
 
-class MolForceFieldBondtypes(BaseModel):
+class MolForceFieldBondtype(BaseModel):
     """
-    section [ bondtypes ] in the itp file 
+    section [ bondtypes ] in the itp file
     example AA (amber):
     --------
     [ bondtypes ]
@@ -143,6 +132,7 @@ class MolForceFieldBondtypes(BaseModel):
     Note:
     - only AmberFF is tested.
     """
+
     ai: str = Field(..., description="First atom type")
     aj: str = Field(..., description="Second atom type")
     func: int = Field(..., description="Function type")
@@ -161,7 +151,7 @@ class MolForceFieldBondtypes(BaseModel):
     )
 
 
-class MolForceFieldAngletypes(BaseModel):
+class MolForceFieldAngletype(BaseModel):
     """
     section [ angletypes ] in the itp file
     example AA (amber):
@@ -171,6 +161,7 @@ class MolForceFieldAngletypes(BaseModel):
     HW  OW  HW           1   104.520    836.800 ; TIP3P water
     --------
     """
+
     ai: str = Field(..., description="First atom type")
     aj: str = Field(..., description="Second atom type")
     k: str = Field(..., description="Third atom type")
@@ -191,11 +182,12 @@ class MolForceFieldAngletypes(BaseModel):
     )
 
 
-class MolForceFieldDihedraltypes(BaseModel):
+class MolForceFieldDihedraltype(BaseModel):
     """
-    section [ dihedrals ] in the itp file
+    Base class for dihedral in a force field,
+    defined in section [ dihedrals ] in the itp file
     example amber , func=4:
-    -------- 
+    --------
     [ dihedraltypes ]
     ;i  j   k  l     func      phase      kd      pn
     CA  CA  CA  OH       4      180.00     4.60240     2    ; new99
@@ -212,39 +204,87 @@ class MolForceFieldDihedraltypes(BaseModel):
     ;  i    j    k    l   func     coefficients
     Br     C      CB     CT      3      0.00000   0.00000   0.00000   0.00000   0.00000   0.00000 ; acyl halide
     --------
-    """
 
+    Note on the function type:
+    - When function type is 3 or 5, all coefficients c0 to c5 are required.
+    - When function type is 4 or 9, c0, c1 are required as float, c2 is required as integer, and c3 to c5 are optional.
+    - Other function type validations are not implemented.
+    """  # noqa: E501
 
-    
+    ai: str = Field(..., description="First atom index")
+    aj: str = Field(..., description="Second atom index")
+    ak: str = Field(..., description="Third atom index")
+    al: str = Field(..., description="Fourth atom index")
+    func: int = Field(..., description="Dihedral function")
+    c0: float = Field(None, description="c0")
+    c1: float = Field(None, description="c1")
+    c2: Union[float, int] = Field(None, description="c2")
+    c3: Optional[float] = Field(None, description="c3")
+    c4: Optional[float] = Field(None, description="c4")
+    c5: Optional[float] = Field(None, description="c5")
 
+    @model_validator(mode="before")
+    def check_func_and_coefficients(cls, values):
+        func = values.get("func")
+        if func in (3, 5):
+            for field in ["c0", "c1", "c2", "c3", "c4", "c5"]:
+                if values.get(field) is None:
+                    raise ValueError(f"{field} is required when func is {func}.")
+        elif func in (4, 9):
+            if values.get("c0") is None or values.get("c1") is None:
+                raise ValueError("c0 and c1 are required when func is 4 or 9.")
+            if values.get("c2") is None:
+                raise ValueError("c2 is required when func is 4 or 9.")
+            if not isinstance(values.get("c2"), int):
+                raise ValueError("c2 must be an integer when func is 4 or 9.")
+        else:
+            raise ValueError("Only func values 3, 4, 5, and 9 are supported.")
 
-class MolForceField(BaseModel):
-    """
-    Represents a force field in a molecule topology.
-    Note:
-    - all the sections exept [ defaults ] can have multiple entries.
-    """
-    defaults: MolForceFieldDefaults = Field(
-        ..., description="Force field defaults setup")
-    atomtypes: List[MolForceFieldAtomtypes] = Field(
-        ..., description="Atomtypes")
-    nonbond_params: Optional[List[MolForceFieldNonbondParams]] = Field(
-        ..., description="Nonbond parameters")
-    bondtypes: Optional[List[MolForceFieldBondtypes]] = Field(
-        ..., description="Bond types")
-    angletypes: Optional[List[MolForceFieldAngletypes]] = Field(
-        ..., description="Angle types")
-    # dihedraltypes: Optional[List[MolForceFieldDihedraltypes]] = Field(
-    #     ..., description="Dihedral types")
-    
-    
+        if func not in (3, 5):
+            for field in ["c3", "c4", "c5"]:
+                if values.get(field) is not None:
+                    raise ValueError(
+                        f"{field} can only have a value if func is 3 or 5."
+                    )
+        return values
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "ai": "CA",
+                    "aj": "CA",
+                    "ak": "CA",
+                    "al": "OH",
+                    "func": 4,
+                    "c0": 180.00,
+                    "c1": 4.60240,
+                    "c2": 2,
+                    # c3 to c5 are optional
+                },
+                {
+                    "ai": "Br",
+                    "aj": "C",
+                    "ak": "CB",
+                    "al": "CT",
+                    "func": 3,
+                    "c0": 0.00000,
+                    "c1": 0.00000,
+                    "c2": 0.00000,
+                    "c3": 0.00000,
+                    "c4": 0.00000,
+                    "c5": 0.00000,
+                },
+            ]
+        }
+    )
 
 
 class MolTopAtom(BaseModel):
     """
     Base class for atom in a molecule topology, defined in [ atoms ] section
     """
+
     id: int = Field(..., description="Atom index")
     atom_type: str = Field(..., description="Atom type")
     resnr: int = Field(..., description="Residue number")
@@ -271,6 +311,7 @@ class MolTopBond(BaseModel):
     """
     Base class for bond in a molecule topology, defined in [ bonds ] section
     """
+
     ai: int = Field(..., description="First atom index")
     aj: int = Field(..., description="Second atom index")
     func: int = Field(..., description="Bond function")
@@ -293,6 +334,7 @@ class MolTopPair(BaseModel):
     """
     Base class for pair in a molecule topology, defined in [ pairs ] section
     """
+
     ai: int = Field(..., description="First atom index")
     aj: int = Field(..., description="Second atom index")
     model_config = ConfigDict(
@@ -309,6 +351,7 @@ class MolTopAngle(BaseModel):
     """
     Base class for angle in a molecule topology defined in [ angles ] section
     """
+
     ai: int = Field(..., description="First atom index")
     aj: int = Field(..., description="Second atom index")
     ak: int = Field(..., description="Third atom index")
@@ -333,30 +376,33 @@ class MolTopDihedral(BaseModel):
     """
     Base class for dihedral in a molecule topology,
     defined in [ dihedrals ] section
-    
+
     Note on the function type:
-    - When function type is 3 or 5, all coefficients c2 to c5 are required.
+    - Validation: only when func is 3 or 5, c3 to c5 can be supplied
     - Other function type validations are not implemented.
     """
+
     ai: int = Field(..., description="First atom index")
     aj: int = Field(..., description="Second atom index")
     ak: int = Field(..., description="Third atom index")
     al: int = Field(..., description="Fourth atom index")
     func: int = Field(..., description="Dihedral function")
-    c0: float = Field(..., description="c0")
-    c1: float = Field(..., description="c1")
+    c0: Optional[float] = Field(None, description="c0")
+    c1: Optional[float] = Field(None, description="c1")
     c2: Optional[float] = Field(None, description="c2")
     c3: Optional[float] = Field(None, description="c3")
     c4: Optional[float] = Field(None, description="c4")
     c5: Optional[float] = Field(None, description="c5")
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     def check_func_and_coefficients(cls, values):
-        func = values.get('func')
+        func = values.get("func")
         if func not in (3, 5):
-            for field in ['c3', 'c4', 'c5']:
+            for field in ["c3", "c4", "c5"]:
                 if values.get(field) is not None:
-                    raise ValueError(f"{field} can only have a value if func is 3 or 5.")
+                    raise ValueError(
+                        f"{field} can only have a value if func is 3 or 5."
+                    )
         return values
 
     model_config = ConfigDict(
@@ -374,31 +420,35 @@ class MolTopDihedral(BaseModel):
                 "c4": 4.0,
                 "c5": 5.0,
             },
-            "examples": [
-                {
-                    "ai": 1,
-                    "aj": 2,
-                    "ak": 3,
-                    "al": 4,
-                    "func": 4,
-                    "c0": 0.0,
-                    "c1": 1.0
-                    # c2 to c5 are optional
-                },
-                {
-                    "ai": 1,
-                    "aj": 2,
-                    "ak": 3,
-                    "al": 4,
-                    "func": 5,
-                    "c0": 0.0,
-                    "c1": 1.0,
-                    "c2": 2.0,
-                    # c3 to c5 are optional
-                }
-            ]
         }
     )
+
+
+# ----------< Aggregation Data >---------- #
+
+
+class MolForceField(BaseModel):
+    """
+    Represents a force field in a molecule topology.
+    Note:
+    - all the sections exept [ defaults ] can have multiple entries.
+    """
+
+    defaults: MolForceFieldDefaults = Field(
+        ..., description="Force field defaults setup"
+    )
+    atomtypes: List[MolForceFieldAtomtype] = Field(..., description="Atomtypes")
+    nonbond_params: Optional[List[MolForceFieldNonbondParam]] = Field(
+        ..., description="Nonbond parameters"
+    )
+    bondtypes: Optional[List[MolForceFieldBondtype]] = Field(
+        ..., description="Bond types"
+    )
+    angletypes: Optional[List[MolForceFieldAngletype]] = Field(
+        ..., description="Angle types"
+    )
+    # dihedraltypes: Optional[List[MolForceFieldDihedraltypes]] = Field(
+    #     ..., description="Dihedral types")
 
 
 class MolTop(BaseModel):
@@ -406,6 +456,7 @@ class MolTop(BaseModel):
     example data posted at link:
     https://github.com/xinmengbcr/MolTopolParser/wiki/Data-Format-%E2%80%90-GMX-%E2%80%90-Molecule-Topology-Definition
     """
+
     # molecule_type is a dictionary with the molecule name and nrexcl
     molecule_type: dict[str, int] = Field(..., description="Molecule type")
     atoms: List[MolTopAtom] = Field(..., description="Atoms in molecule")
@@ -415,6 +466,29 @@ class MolTop(BaseModel):
     dihedrals: Optional[List[MolTopDihedral]] = Field(
         ..., description="Dihedrals in molecule"
     )
+
+
+# ----------< Aggregation-File Data >---------- #
+
+
+class GroFile(BaseModel):
+    """
+    Represents a Gromacs .gro file.
+    sys_name: str
+    num_atoms: int
+    gro_atoms: list of GroFileAtom
+    box_size: np.array
+    """
+
+    sys_name: str = Field(..., description="System name")
+    num_atoms: int = Field(..., description="Number of atoms")
+    gro_atoms: List[GroAtom] = Field(..., description="List of atoms")
+    box_size: List[float] = Field(..., description="Box size")
+
+    # TBD: Add dump method to write the gro file, or convert to other formats
+
+
+# ----------< Summarization Data >---------- #
 
 
 class Topology(BaseModel):
@@ -432,19 +506,45 @@ class Topology(BaseModel):
 
     system: str = Field(..., description="System name")
     molecules: List[dict[str, int]] = Field(
-        ..., description="Molecules and counts"
+        ..., description="Molecules and counts")
+    include_itps: Optional[List[str]] = Field(None, description="Include files")
+    molecule_topologies: Optional[List[MolTop]] = Field(
+        None, description="Topologies defined in the top file"
     )
-    include_itps: Optional[List[str]] = Field(..., description="Include files")
-    molecule_topologies: Optional[List[MolTop]] = \
-        Field(..., description="Molecule topology")
-    # ff_atomtypes: Optional[List[str]] = Field(
-    #     ..., description="Atom types in force field")
+    forcefiled: Optional[MolForceField] = Field(None, description="Force field")
+    inlines: Optional[List[str]] = Field(
+        None, description="directly given in .top file that can \
+        be any content in force field or molecule topology")
     
-    # atomtypes: Optional[List[str]] = Field(..., description="Atom types")
+    # 
+    # --- TBD: sort out molecular topologies/force field parameters.
+    # one ways is to do it here in the class:
+    # loop set(molecule types/names) --> parse the inlines and include_itps 
+    # --> filling the MolTop --> add in the molecule_topologies   
+    # molecule_types = sort_molecule_types(self.molecules) 
+    # call class method MolTop 
+    # sort_out_molecule_topologies(molecule_types, self.inlines, self.include_itps)
+    # so the parser should happen in their corresponding data levels.
+    # Summerization level entry of the whole system/content
+    # The Summerization level level, calls and organises aggregation level.
+    # The aggregation/ aggregation-file level handles the real parsing 
+    # The base data level. just uses the direct data definiation 
+    # 
+    # so the parser functions can go as the class methods in the aggregation level? 
+    # and the summerization level can call the aggregation level methods to parse the data
+    # and organise the data in the big picture.
+    #
+    # then the aggregation level works like a componennt in React. 
+    # the summarnization level works like the main component that calls the sub-components. 
+    # and able to pass the data
+    # 
+    # Of course, the aggregation level can also have to dump methods to convert or write out the data
+    # Then this is anther call after the parsing, when we already organised the aggregation data. 
+    # 
 
-    # extra include force field files in the top file
-    # shallow_include: Optional[List[str]] = Field(...,
-    #  description="Include files")
+
+
+# ----------< File Parser Function >---------- #
 
 
 def parse_gro_file(input_file: str) -> GroFile:
@@ -468,9 +568,10 @@ def parse_gro_file(input_file: str) -> GroFile:
         lines = f.readlines()
         num_atoms = int(lines[1])
         box_size = np.array(
-            lines[_skip_lines + num_atoms].strip("\n").lstrip().split(), dtype=float
+            lines[_skip_lines + num_atoms].strip("\n").lstrip().split(),
+            dtype=float
         )
-    gro_atoms: List[GroFileAtom] = []
+    gro_atoms: List[GroAtom] = []
     for line in lines[_skip_lines: _skip_lines + num_atoms]:
         line_length = len(line)
         atom_data = {
@@ -486,7 +587,7 @@ def parse_gro_file(input_file: str) -> GroFile:
             atom_data["vx"] = float(line[44:52])
             atom_data["vy"] = float(line[52:60])
             atom_data["vz"] = float(line[60:68])
-        gro_atoms.append(GroFileAtom(**atom_data))
+        gro_atoms.append(GroAtom(**atom_data))
         if line_length not in (45, 69):
             raise ValueError(
                 f"Gro file line not formatted correctly:\n"
@@ -501,28 +602,6 @@ def parse_gro_file(input_file: str) -> GroFile:
         gro_atoms=gro_atoms,
         box_size=box_size.tolist(),
     )
-
-
-def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
-    """
-    Find the range of a section in the lines.
-    """
-    idx_section = [
-        x for x in range(len(lines))
-        if f"[ {section_name} ]" in lines[x].lower()
-    ]
-    idx_section_general = [x for x in range(len(lines))
-                           if "[ " in lines[x].lower()]
-    start = idx_section[0]
-    try:
-        end = idx_section_general[
-            idx_section_general.index(start) + 1
-        ]  # next '[' idx
-        # data_target = lines[start:end]
-    except IndexError:
-        end = False
-        # data_target = lines[start:]  # Not data[start:-1]
-    return start, end, idx_section, idx_section_general
 
 
 def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
@@ -566,37 +645,105 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
         lines = infile.readlines()
         # clean data; throw the lines that start with ; or empty lines
         lines = [
-            line.strip() for line in lines if not line.startswith(";")
-            and line.strip()
+            line.strip()
+            for line in lines
+            if not line.startswith(";") and line.strip()
         ]
+        # deepcopy of the lines
+        inlines = lines.copy()
+
         # look for the section [ system ]
         start, _, _, _ = find_section_range(lines, "system")
         system_name = lines[start + 1]
+        inlines.remove(lines[start])
+        inlines.remove(lines[start + 1])
 
         # look for the section [ molecules ]
         start, end, _, _ = find_section_range(lines, "molecules")
-        data_target = lines[start+1:end] if end else lines[start+1:]
+        data_target = lines[start + 1: end] if end else lines[start + 1:]
         for line in data_target:
             molname, molnum = line.split()[:2]
             system_molecules.append({molname: int(molnum)})
-        
+                
+        # remove the lines inside the data_target and the header line
+        for line in data_target:
+            inlines.remove(line)
+        inlines.remove(lines[start])
+
         # look for the included files, lines starting with #
         target_lines = [line for line in lines if line.startswith("#include")]
-        for line in target_lines:
-            # get rid of the inline comments that starts with ;
-            line_wo_comment = line.split(";")[0]
-            path = line_wo_comment.split()[1]
-            if path is not None:
-                itp_paths.append(
-                  f"{os.path.dirname(os.path.abspath(filename))}/{path[1:-1]}"
-                )  # strip sorrounding quotes
+        if target_lines:
+            for line in target_lines:
+                # get rid of the inline comments that starts with ;
+                line_wo_comment = line.split(";")[0]
+                path = line_wo_comment.split()[1]
+                if path is not None:
+                    itp_paths.append(
+                        f"{os.path.dirname(os.path.abspath(filename))}/{path[1:-1]}"
+                    )  # strip sorrounding quotes
+                # remove the lines inside the target_lines
+                inlines.remove(line)
+        else:
+            itp_paths = None
+
+        # second layer of #include files
+        # this helps to get the ffnonbonded.itp or ffbonded.itp
+        # inside a forcefield.itp
+        for itp_path in itp_paths.copy():
+            with open(itp_path, "r", encoding="utf-8") as itpfile:
+                itplines = itpfile.readlines()
+                itplines = [
+                    line.strip() for line in itplines
+                    if not line.startswith(";")
+                ]
+                target_lines = [line for line in itplines
+                                if line.startswith("#include")]
+                if target_lines:
+                    for line in target_lines:
+                        # get rid of the inline comments that starts with ;
+                        line_wo_comment = line.split(";")[0]
+                        path = line_wo_comment.split()[1]
+                        if path is not None:
+                            itp_paths.append(
+                                f"{os.path.dirname(os.path.abspath(itp_path))}/{path[1:-1]}"
+                            )  # strip sorrounding quotes
+        
+        if not inlines:
+            inlines = None
+
         # sum up the data
         top_data = {
             "system": system_name,
             "molecules": system_molecules,
             "include_itps": itp_paths,
+            "inlines": inlines,
         }
-        return top_data
+        return Topology(**top_data)
+
+
+# ----------< Helper function >---------- #
+
+
+def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
+    """
+    Find the range of a section in the lines.
+    """
+    idx_section = [
+        x for x in range(len(lines)) if (f"[ {section_name} ]" in lines[x].lower())
+    ]
+    idx_section_general = [
+        x for x in range(len(lines)) if ("[ " in lines[x].lower())
+    ]
+    start = idx_section[0]
+    try:
+        end = idx_section_general[
+            idx_section_general.index(start) + 1
+        ]  # next '[' idx
+        # data_target = lines[start:end]
+    except IndexError:
+        end = False
+        # data_target = lines[start:]  # Not data[start:-1]
+    return start, end, idx_section, idx_section_general
 
 
 # def load_martini_ff_vdw(itp_file):
