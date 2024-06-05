@@ -450,6 +450,21 @@ class MolForceField(BaseModel):
     # dihedraltypes: Optional[List[MolForceFieldDihedraltypes]] = Field(
     #     ..., description="Dihedral types")
 
+    @classmethod
+    def parser(
+        content_lines: Optional[List[str]] = None,
+        content_files: Optional[List[str]] = None,
+    ):
+        """
+        Parse the force field parameters from the content_lines or content_files.
+        """
+        if not content_lines and not content_files:
+            raise ValueError("Either content_lines or content_files must be provided.")
+        if content_files:
+            pass  # TBD: read the content from the files
+        if content_lines:
+            pass  # TBD: read the content from the lines
+
 
 class MolTop(BaseModel):
     """[ moleculetype ] section .
@@ -505,43 +520,51 @@ class Topology(BaseModel):
     """
 
     system: str = Field(..., description="System name")
-    molecules: List[dict[str, int]] = Field(
-        ..., description="Molecules and counts")
+    molecules: List[dict[str, int]] = Field(..., description="Molecules and counts")
     include_itps: Optional[List[str]] = Field(None, description="Include files")
     molecule_topologies: Optional[List[MolTop]] = Field(
         None, description="Topologies defined in the top file"
     )
     forcefiled: Optional[MolForceField] = Field(None, description="Force field")
     inlines: Optional[List[str]] = Field(
-        None, description="directly given in .top file that can \
-        be any content in force field or molecule topology")
-    
-    # 
+        None,
+        description="directly given in .top file that can \
+        be any content in force field or molecule topology",
+    )
+
+    # sort out the force field parameters
+    def pull_forcefiled(self):
+        """
+        Pull the force field parameters from the inlines and include_itps
+        """
+        inlines = self.inlines or []
+        include_itps = self.include_itps or []
+        self.forcefiled = MolForceField.paser(inlines, include_itps)
+
     # --- TBD: sort out molecular topologies/force field parameters.
     # one ways is to do it here in the class:
-    # loop set(molecule types/names) --> parse the inlines and include_itps 
-    # --> filling the MolTop --> add in the molecule_topologies   
-    # molecule_types = sort_molecule_types(self.molecules) 
-    # call class method MolTop 
+    # loop set(molecule types/names) --> parse the inlines and include_itps
+    # --> filling the MolTop --> add in the molecule_topologies
+    # molecule_types = sort_molecule_types(self.molecules)
+    # call class method MolTop
     # sort_out_molecule_topologies(molecule_types, self.inlines, self.include_itps)
     # so the parser should happen in their corresponding data levels.
     # Summerization level entry of the whole system/content
     # The Summerization level level, calls and organises aggregation level.
-    # The aggregation/ aggregation-file level handles the real parsing 
-    # The base data level. just uses the direct data definiation 
-    # 
-    # so the parser functions can go as the class methods in the aggregation level? 
+    # The aggregation/ aggregation-file level handles the real parsing
+    # The base data level. just uses the direct data definiation
+    #
+    # so the parser functions can go as the class methods in the aggregation level?
     # and the summerization level can call the aggregation level methods to parse the data
     # and organise the data in the big picture.
     #
-    # then the aggregation level works like a componennt in React. 
-    # the summarnization level works like the main component that calls the sub-components. 
+    # then the aggregation level works like a componennt in React.
+    # the summarnization level works like the main component that calls the sub-components.
     # and able to pass the data
-    # 
+    #
     # Of course, the aggregation level can also have to dump methods to convert or write out the data
-    # Then this is anther call after the parsing, when we already organised the aggregation data. 
-    # 
-
+    # Then this is anther call after the parsing, when we already organised the aggregation data.
+    #
 
 
 # ----------< File Parser Function >---------- #
@@ -568,11 +591,10 @@ def parse_gro_file(input_file: str) -> GroFile:
         lines = f.readlines()
         num_atoms = int(lines[1])
         box_size = np.array(
-            lines[_skip_lines + num_atoms].strip("\n").lstrip().split(),
-            dtype=float
+            lines[_skip_lines + num_atoms].strip("\n").lstrip().split(), dtype=float
         )
     gro_atoms: List[GroAtom] = []
-    for line in lines[_skip_lines: _skip_lines + num_atoms]:
+    for line in lines[_skip_lines : _skip_lines + num_atoms]:
         line_length = len(line)
         atom_data = {
             "resid": int(line[:5]),
@@ -645,9 +667,7 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
         lines = infile.readlines()
         # clean data; throw the lines that start with ; or empty lines
         lines = [
-            line.strip()
-            for line in lines
-            if not line.startswith(";") and line.strip()
+            line.strip() for line in lines if not line.startswith(";") and line.strip()
         ]
         # deepcopy of the lines
         inlines = lines.copy()
@@ -660,11 +680,11 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
 
         # look for the section [ molecules ]
         start, end, _, _ = find_section_range(lines, "molecules")
-        data_target = lines[start + 1: end] if end else lines[start + 1:]
+        data_target = lines[start + 1 : end] if end else lines[start + 1 :]
         for line in data_target:
             molname, molnum = line.split()[:2]
             system_molecules.append({molname: int(molnum)})
-                
+
         # remove the lines inside the data_target and the header line
         for line in data_target:
             inlines.remove(line)
@@ -693,11 +713,11 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
             with open(itp_path, "r", encoding="utf-8") as itpfile:
                 itplines = itpfile.readlines()
                 itplines = [
-                    line.strip() for line in itplines
-                    if not line.startswith(";")
+                    line.strip() for line in itplines if not line.startswith(";")
                 ]
-                target_lines = [line for line in itplines
-                                if line.startswith("#include")]
+                target_lines = [
+                    line for line in itplines if line.startswith("#include")
+                ]
                 if target_lines:
                     for line in target_lines:
                         # get rid of the inline comments that starts with ;
@@ -707,7 +727,7 @@ def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
                             itp_paths.append(
                                 f"{os.path.dirname(os.path.abspath(itp_path))}/{path[1:-1]}"
                             )  # strip sorrounding quotes
-        
+
         if not inlines:
             inlines = None
 
@@ -731,14 +751,10 @@ def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
     idx_section = [
         x for x in range(len(lines)) if (f"[ {section_name} ]" in lines[x].lower())
     ]
-    idx_section_general = [
-        x for x in range(len(lines)) if ("[ " in lines[x].lower())
-    ]
+    idx_section_general = [x for x in range(len(lines)) if ("[ " in lines[x].lower())]
     start = idx_section[0]
     try:
-        end = idx_section_general[
-            idx_section_general.index(start) + 1
-        ]  # next '[' idx
+        end = idx_section_general[idx_section_general.index(start) + 1]  # next '[' idx
         # data_target = lines[start:end]
     except IndexError:
         end = False

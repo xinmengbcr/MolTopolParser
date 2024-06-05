@@ -40,11 +40,23 @@ Purpose: Provides an entry point to access the whole involved content.
 
 
 
-## dependencies
+***dependencies***
 - pydantic 
 - numpy 
 
-## test 
+***test***
 - make installable: prepare setup.py; pip install -e .
 - example test command line: pytest tests/test_gmx.py -v -s
+
+
+***setup for developing*** 
+```text
+cd MolTopolParser
+python -m venv .venv 
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+```
+
 
