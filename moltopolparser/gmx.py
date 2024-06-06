@@ -58,18 +58,19 @@ class MolForceFieldDefaults(BaseModel):
     1               2               yes             0.5     0.8333
     --------
     """
+
     nbfunc: int = Field(..., description="Number of functions")
     comb_rule: int = Field(..., description="Combination rule")
     gen_pairs: Optional[str] = Field(None, description="Generate pairs")
     fudgeLJ: Optional[float] = Field(None, description="Fudge LJ")
     fudgeQQ: Optional[float] = Field(None, description="Fudge QQ")
-    
-    @classmethod
-    def title(cls) -> str:
-        return 'defaults'
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> 'MolForceFieldDefaults':
+    def title(cls) -> str:
+        return "defaults"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> "MolForceFieldDefaults":
         """
         Parse the full content of the section [ defaults ].
         """
@@ -89,7 +90,7 @@ class MolForceFieldDefaults(BaseModel):
         }
 
         return cls(**data)
-         
+
 
 class MolForceFieldAtomtype(BaseModel):
     """
@@ -117,33 +118,32 @@ class MolForceFieldAtomtype(BaseModel):
 
     @classmethod
     def title(cls) -> str:
-        return 'atomtypes'
+        return "atomtypes"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List['MolForceFieldAtomtype']:
+    def from_lines(cls, content: List[str]) -> List["MolForceFieldAtomtype"]:
         """
         Parse the full content of the section [ atomtypes ].
         """
         instance_list = []
-        start, end, idx_section, idx_section_general = find_section_range(content, cls.title())
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
         if start == -1:
-            raise ValueError(
-                f"Section [ {cls.title()} ] not found in the content."
-            )
+            raise ValueError(f"Section [ {cls.title()} ] not found in the content.")
         # the machtching section can be multiple times in the content
-        # so we need to loop over idx_section lists 
+        # so we need to loop over idx_section lists
         for idx in idx_section:
             start = idx
             try:
                 end = idx_section_general[idx_section_general.index(start) + 1]
-                data_target = content[start+1:end]
+                data_target = content[start + 1 : end]
             except IndexError:
                 end = False
-                data_target = content[start+1:]  # Not data[start:-1]
-                
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
             for target_line in data_target:
-                target_line = content[start + 1].strip()
-                parts = target_line.split()[:7] # maxumum 7 parts
+                parts = target_line.split()[:7]  # maxumum 7 parts
                 # remove the last element if starts with ;
                 if parts[-1].startswith(";"):
                     parts = parts[:-1]
@@ -159,7 +159,7 @@ class MolForceFieldAtomtype(BaseModel):
                         "epsilon": float(parts[6]),
                     }
                 elif len(parts) == 6:
-                    data = {    
+                    data = {
                         "name": parts[0],
                         "mass": float(parts[1]),
                         "charge": float(parts[2]),
@@ -168,12 +168,10 @@ class MolForceFieldAtomtype(BaseModel):
                         "epsilon": float(parts[5]),
                     }
                 else:
-                    raise ValueError(
-                        "The atomtype line is not formatted correctly."
-                    )
+                    raise ValueError("The atomtype line is not formatted correctly.")
                 instance_list.append(cls(**data))
         return instance_list
-    
+
 
 class MolForceFieldNonbondParam(BaseModel):
     """section [ nonbond_params ] in the itp file
@@ -205,38 +203,34 @@ class MolForceFieldNonbondParam(BaseModel):
 
     @classmethod
     def title(cls) -> str:
-        return 'nonbond_params'
-    
+        return "nonbond_params"
+
     @classmethod
-    def from_lines(cls, content: List[str]) -> List['MolForceFieldNonbondParam']:
+    def from_lines(cls, content: List[str]) -> List["MolForceFieldNonbondParam"]:
         """
         Parse the full content of the section [ nonbond_params ].
         """
         instance_list = []
-        start, end, idx_section, idx_section_general = find_section_range(content, cls.title())
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
 
-        if start == -1: 
-            return None
-        
-        for line in content:
-            print(line)
         if start == -1:
-            raise ValueError(
-                f"Section [ {cls.title()} ] not found in the content."
-            )
+            print(f"warning: not section {cls.title()} is found")
+            return None
+
         # the machtching section can be multiple times in the content
-        # so we need to loop over idx_section lists 
+        # so we need to loop over idx_section lists
         for idx in idx_section:
             start = idx
             try:
                 end = idx_section_general[idx_section_general.index(start) + 1]
-                data_target = content[start+1:end]
+                data_target = content[start + 1 : end]
             except IndexError:
                 end = False
-                data_target = content[start+1:]  # Not data[start:-1]
-                
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
             for target_line in data_target:
-                target_line = content[start + 1].strip()
                 parts = target_line.split()[:5]  # maxumum 5 parts
                 data = {
                     "ai": parts[0],
@@ -279,6 +273,47 @@ class MolForceFieldBondtype(BaseModel):
         }
     )
 
+    @classmethod
+    def title(cls) -> str:
+        return "bondtypes"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolForceFieldBondtype"]:
+        """
+        Parse the full content of the section [ bondtypes ].
+        """
+        instance_list = []
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
+
+        if start == -1:
+            print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # the machtching section can be multiple times in the content
+        # so we need to loop over idx_section lists
+        for idx in idx_section:
+            start = idx
+            try:
+                end = idx_section_general[idx_section_general.index(start) + 1]
+                data_target = content[start + 1 : end]
+            except IndexError:
+                end = False
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
+            for target_line in data_target:
+                parts = target_line.split()[:5]  # maxumum 5 parts
+                data = {
+                    "ai": parts[0],
+                    "aj": parts[1],
+                    "func": int(parts[2]),
+                    "b0": float(parts[3]),
+                    "kb": float(parts[4]),
+                }
+                instance_list.append(cls(**data))
+        return instance_list
+
 
 class MolForceFieldAngletype(BaseModel):
     """
@@ -293,7 +328,7 @@ class MolForceFieldAngletype(BaseModel):
 
     ai: str = Field(..., description="First atom type")
     aj: str = Field(..., description="Second atom type")
-    k: str = Field(..., description="Third atom type")
+    ak: str = Field(..., description="Third atom type")
     func: int = Field(..., description="Function type")
     th0: float = Field(..., description="Equilibrium angle")
     cth: float = Field(..., description="Angle force constant")
@@ -302,13 +337,55 @@ class MolForceFieldAngletype(BaseModel):
             "example": {
                 "ai": "HW",
                 "aj": "OW",
-                "k": "HW",
+                "ak": "HW",
                 "func": 1,
                 "th0": 104.520,
                 "cth": 836.800,
             }
         }
     )
+
+    @classmethod
+    def title(cls) -> str:
+        return "angletypes"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolForceFieldAngletype"]:
+        """
+        Parse the full content of the section [ angletypes ].
+        """
+        instance_list = []
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
+
+        if start == -1:
+            print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # the machtching section can be multiple times in the content
+        # so we need to loop over idx_section lists
+        for idx in idx_section:
+            start = idx
+            try:
+                end = idx_section_general[idx_section_general.index(start) + 1]
+                data_target = content[start + 1 : end]
+            except IndexError:
+                end = False
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
+            for target_line in data_target:
+                parts = target_line.split()[:6]  # maxumum 6 parts
+                data = {
+                    "ai": parts[0],
+                    "aj": parts[1],
+                    "ak": parts[2],
+                    "func": int(parts[3]),
+                    "th0": float(parts[4]),
+                    "cth": float(parts[5]),
+                }
+                instance_list.append(cls(**data))
+        return instance_list
 
 
 class MolForceFieldDihedraltype(BaseModel):
@@ -407,6 +484,75 @@ class MolForceFieldDihedraltype(BaseModel):
             ]
         }
     )
+
+    @classmethod
+    def title(cls) -> str:
+        return "dihedraltypes"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolForceFieldDihedraltype"]:
+        """
+        Parse the full content of the section
+        """
+        instance_list = []
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
+
+        if start == -1:
+            print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # the machtching section can be multiple times in the content
+        # so we need to loop over idx_section lists
+        for idx in idx_section:
+            start = idx
+            try:
+                end = idx_section_general[idx_section_general.index(start) + 1]
+                data_target = content[start + 1 : end]
+            except IndexError:
+                end = False
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
+            for target_line in data_target:
+                target_line = filter_comment(target_line)  # clean ;
+                # the length of the line split should be 8 or 11
+                if len(target_line.split()) == 8:
+                    parts = target_line.split()[:8]
+                    data = {
+                        "ai": parts[0],
+                        "aj": parts[1],
+                        "ak": parts[2],
+                        "al": parts[3],
+                        "func": int(parts[4]),
+                        "c0": float(parts[5]),
+                        "c1": float(parts[6]),
+                        "c2": int(parts[7]),
+                        "c3": None,
+                        "c4": None,
+                        "c5": None,
+                    }
+                elif len(target_line.split()) == 11:
+                    parts = target_line.split()[:11]
+                    data = {
+                        "ai": parts[0],
+                        "aj": parts[1],
+                        "ak": parts[2],
+                        "al": parts[3],
+                        "func": int(parts[4]),
+                        "c0": float(parts[5]),
+                        "c1": float(parts[6]),
+                        "c2": int(parts[7]),
+                        "c3": float(parts[8]),
+                        "c4": float(parts[9]),
+                        "c5": float(parts[10]),
+                    }
+                else:
+                    raise ValueError(
+                        "The dihedraltype line is not formatted correctly."
+                    )
+                instance_list.append(cls(**data))
+        return instance_list
 
 
 class MolTopAtom(BaseModel):
@@ -558,7 +704,7 @@ class MolTopDihedral(BaseModel):
 
 class MolForceField(BaseModel):
     """
-    Represents a force field in a molecule topology.
+    Represents a molecular force field.
     Note:
     - all the sections exept [ defaults ] can have multiple entries.
     """
@@ -576,8 +722,9 @@ class MolForceField(BaseModel):
     angletypes: Optional[List[MolForceFieldAngletype]] = Field(
         ..., description="Angle types"
     )
-    # dihedraltypes: Optional[List[MolForceFieldDihedraltypes]] = Field(
-    #     ..., description="Dihedral types")
+    dihedraltypes: Optional[List[MolForceFieldDihedraltype]] = Field(
+        ..., description="Dihedral types"
+    )
 
     @classmethod
     def parser(
@@ -590,20 +737,23 @@ class MolForceField(BaseModel):
         """
         # contains the whole content of the force field
         ff_content = clean_lines(content_lines, content_files)
-        # prepare MolForceFieldDefaults
+        # prepare attibutes
         defaults = MolForceFieldDefaults.from_lines(ff_content)
-        # prepare list MolForceFieldAtomtype
         atomtypes = MolForceFieldAtomtype.from_lines(ff_content)
-        # prepare list of MolForceFieldNonbondParam
         nonbond_params = MolForceFieldNonbondParam.from_lines(ff_content)
-        # TBD: prepare list of MolForceFieldBondtype
-        # TBD: prepare list of MolForceFieldAngletype
-        # TBD: prepare list of MolForceFieldDihedraltype
-        
-        return defaults, atomtypes, nonbond_params
+        bondtypes = MolForceFieldBondtype.from_lines(ff_content)
+        angletypes = MolForceFieldAngletype.from_lines(ff_content)
+        dihedraltypes = MolForceFieldDihedraltype.from_lines(ff_content)
 
-        
-        
+        data = {
+            "defaults": defaults,
+            "atomtypes": atomtypes,
+            "nonbond_params": nonbond_params,
+            "bondtypes": bondtypes,
+            "angletypes": angletypes,
+            "dihedraltypes": dihedraltypes,
+        }
+        return MolForceField(**data)
 
 
 class MolTop(BaseModel):
@@ -683,8 +833,8 @@ class Topology(BaseModel):
             self.forcefield = MolForceField.parser(inlines, include_itps)
         else:
             raise ValueError("Force field already exists in the topology.")
-        return self.forcefield
 
+        # return self.forcefield
 
     # --- TBD: sort out molecular topologies/force field parameters.
     # one ways is to do it here in the class:
@@ -903,7 +1053,7 @@ def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
         start = -1
         # return and stop
         return start, -1, idx_section, idx_section_general
-    
+
     try:
         end = idx_section_general[idx_section_general.index(start) + 1]  # next '[' idx
         # data_target = lines[start:end]
@@ -913,8 +1063,9 @@ def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
     return start, end, idx_section, idx_section_general
 
 
-def clean_lines(lines: Optional[List[str]] = None,
-                files: Optional[List[str]] = None) -> List[str]:
+def clean_lines(
+    lines: Optional[List[str]] = None, files: Optional[List[str]] = None
+) -> List[str]:
     """
     read lines or files and
     filter out emtpy lines and lines starting *comment_start_sysmbols*
@@ -923,24 +1074,44 @@ def clean_lines(lines: Optional[List[str]] = None,
     content = []
     comment_start_sysmbols = (";", "*", "#include")
     if lines is not None and lines != []:
-        lines = [line.strip() for line in lines if line.strip()
-                 and not line.startswith(comment_start_sysmbols)]
+        lines = [
+            line.strip()
+            for line in lines
+            if line.strip() and not line.startswith(comment_start_sysmbols)
+        ]
         content.extend(lines)
     if files is not None and files != []:
         for file in files:
             with open(file, "r", encoding="utf-8") as f:
-                lines = [line.strip() for line in f.readlines() if line.strip()
-                         and not line.startswith(comment_start_sysmbols)]
+                lines = [
+                    line.strip()
+                    for line in f.readlines()
+                    if line.strip() and not line.startswith(comment_start_sysmbols)
+                ]
                 content.extend(lines)
     return content
 
 
+def filter_comment(line: str) -> str:
+    """
+    Filter out the content of the line after the ';' character.
+
+    Parameters:
+    line (str): The line of data.
+
+    Returns:
+    str: The line with the content after ';' removed.
+    """
+    # Split the line at the first occurrence of ';' and return the first part
+    return line.split(";")[0].strip()
+
+
 if __name__ == "__main__":
-    print('run gmx directly')
-    input_file = '../tests/data/gmx/twolayer_include_itp/system.top'
+    print("run gmx directly")
+    input_file = "../tests/data/gmx/twolayer_include_itp/system.top"
     sys_top = parse_top_file(input_file)
     demo, demo2 = sys_top.pull_forcefield()
-    
+
 
 # def load_martini_ff_vdw(itp_file):
 #     """
@@ -988,5 +1159,3 @@ if __name__ == "__main__":
 #                     itpVdwPair_list.append (ItpVdwPair(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12))
 #                     #print(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12) # test ok
 #     return itpVdwPair_list
-
-
