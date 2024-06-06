@@ -131,7 +131,9 @@ def test_parse_top_file():
     input_file = './tests/data/gmx/twolayer_include_itp/system.top'
     sys_top = parse_top_file(input_file)
     assert len(sys_top.include_itps) == 3
-
+    demo = sys_top.pull_forcefield()
+    for line in demo:
+        print(line)
 
 def test_MolTopAtom():
     """
@@ -333,3 +335,4 @@ def test_MolForceFieldDihedraltype():
             c1=4.60240,
             # func 1 is not supported
         )
+

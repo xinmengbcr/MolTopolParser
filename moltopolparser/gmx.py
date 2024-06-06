@@ -452,18 +452,33 @@ class MolForceField(BaseModel):
 
     @classmethod
     def parser(
+        cls,
         content_lines: Optional[List[str]] = None,
         content_files: Optional[List[str]] = None,
     ):
         """
         Parse the force field parameters from the content_lines or content_files.
         """
+        # contains the whole content of the force field
+        ff_content = []
+        # check attributes
         if not content_lines and not content_files:
             raise ValueError("Either content_lines or content_files must be provided.")
-        if content_files:
-            pass  # TBD: read the content from the files
-        if content_lines:
-            pass  # TBD: read the content from the lines
+        # sum up the content
+        if content_lines not in (None, []):
+            ff_content.extend(content_lines)
+        if content_files not in (None, []):
+            # read lines from the files
+            for file in content_files:
+                with open(file, "r", encoding="utf-8") as f:
+                    # clean the lines 
+                    lines = [line.strip() for line in f.readlines() if not line.startswith(";")]
+                    ff_content.extend(lines)
+        #print(ff_content)
+        return ff_content
+
+        
+        
 
 
 class MolTop(BaseModel):
@@ -525,7 +540,7 @@ class Topology(BaseModel):
     molecule_topologies: Optional[List[MolTop]] = Field(
         None, description="Topologies defined in the top file"
     )
-    forcefiled: Optional[MolForceField] = Field(None, description="Force field")
+    forcefield: Optional[MolForceField] = Field(None, description="Force field")
     inlines: Optional[List[str]] = Field(
         None,
         description="directly given in .top file that can \
@@ -533,13 +548,15 @@ class Topology(BaseModel):
     )
 
     # sort out the force field parameters
-    def pull_forcefiled(self):
+    def pull_forcefield(self):
         """
         Pull the force field parameters from the inlines and include_itps
         """
         inlines = self.inlines or []
         include_itps = self.include_itps or []
-        self.forcefiled = MolForceField.paser(inlines, include_itps)
+        # self.forcefield = MolForceField.paser(inlines, include_itps)
+        demo = MolForceField.parser(inlines, include_itps)
+        return demo
 
     # --- TBD: sort out molecular topologies/force field parameters.
     # one ways is to do it here in the class:
