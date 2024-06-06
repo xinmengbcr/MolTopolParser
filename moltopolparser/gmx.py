@@ -822,7 +822,14 @@ class Topology(BaseModel):
         be any content in force field or molecule topology",
     )
 
-    # sort out the force field parameters
+    @property
+    def moleculetypes(self):
+        """
+        Return the molecule types from the molecules section with no duplicates.
+        """
+        molecule_set = {list(mol.keys())[0] for mol in self.molecules}
+        return list(molecule_set)
+
     def pull_forcefield(self):
         """
         Pull the force field parameters from the inlines and include_itps
@@ -833,8 +840,18 @@ class Topology(BaseModel):
             self.forcefield = MolForceField.parser(inlines, include_itps)
         else:
             raise ValueError("Force field already exists in the topology.")
-
         # return self.forcefield
+
+    def pull_molecule_topologies(self):
+        """
+        Pull the molecule topologies from the inlines and include_itps
+        """
+        inlines = self.inlines or []
+        include_itps = self.include_itps or []
+        if self.molecule_topologies is None:
+            self.molecule_topologies = []
+            # TBD: add the molecule type to the molecule topology
+            # for molecule_type in self.moleculetypes:
 
     # --- TBD: sort out molecular topologies/force field parameters.
     # one ways is to do it here in the class:

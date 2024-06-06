@@ -136,6 +136,7 @@ def test_parse_top_file():
     sys_top.pull_forcefield()
     assert isinstance(sys_top.forcefield, MolForceField)
     # print(sys_top.forcefield)
+    print(sys_top.moleculetypes)
 
 
 def test_MolTopAtom():
