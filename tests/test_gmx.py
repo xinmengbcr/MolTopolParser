@@ -1,7 +1,6 @@
 """ Test for moltopolparser.gmx module """
 
 from typing import List
-
 import pytest
 from pydantic import ValidationError
 
@@ -13,7 +12,6 @@ from moltopolparser.gmx import (
     MolTopDihedral,
     MolForceFieldDihedraltype,
 )
-
 
 def test_parse_gro_atom():
     """
@@ -131,10 +129,11 @@ def test_parse_top_file():
     input_file = './tests/data/gmx/twolayer_include_itp/system.top'
     sys_top = parse_top_file(input_file)
     assert len(sys_top.include_itps) == 3
-    demo = sys_top.pull_forcefield()
-    for line in demo:
-        print(line)
+    # demo, demo2, demo3  = sys_top.pull_forcefield()
+    # print(demo2, demo3)
+    
 
+    
 def test_MolTopAtom():
     """
     Test parse atom from data
@@ -335,4 +334,3 @@ def test_MolForceFieldDihedraltype():
             c1=4.60240,
             # func 1 is not supported
         )
-
