@@ -289,7 +289,7 @@ class MolForceFieldBondtype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -361,7 +361,7 @@ class MolForceFieldAngletype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -501,7 +501,7 @@ class MolForceFieldDihedraltype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -635,7 +635,7 @@ class MolTopAtom(BaseModel):
         start, end, _, _ = find_section_range(content, cls.title())
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # in one molecule type, such a section is single
@@ -703,7 +703,7 @@ class MolTopBond(BaseModel):
         start, end, _, _ = find_section_range(content, cls.title())
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # in one molecule type, such a section is single
@@ -721,7 +721,7 @@ class MolTopBond(BaseModel):
                     "c1": float(parts[4]),
                 }
             elif len(parts) == 3 or len(parts) == 4:
-                print("Warning: c0 and c1 are not provided")
+                # print("Warning: c0 and c1 are not provided")
                 data = {
                     "ai": int(parts[0]),
                     "aj": int(parts[1]),
@@ -730,7 +730,7 @@ class MolTopBond(BaseModel):
                     "c1": None,
                 }
             elif len(parts) == 2:
-                print("Warning: func and c0, c1 are not provided")
+                # print("Warning: func and c0, c1 are not provided")
                 data = {
                     "ai": int(parts[0]),
                     "aj": int(parts[1]),
@@ -743,7 +743,6 @@ class MolTopBond(BaseModel):
                 return instance_list
             else:
                 return None
-        
 
 
 class MolTopPair(BaseModel):
@@ -775,7 +774,7 @@ class MolTopPair(BaseModel):
         start, end, _, _ = find_section_range(content, cls.title())
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # in one molecule type, such a section is single
@@ -829,7 +828,7 @@ class MolTopAngle(BaseModel):
         start, end, _, _ = find_section_range(content, cls.title())
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # in one molecule type, such a section is single
@@ -847,7 +846,7 @@ class MolTopAngle(BaseModel):
                     "c1": float(parts[5]),
                 }
             else:
-                print("Warning: c0 and c1 are not provided")
+                # print("Warning: c0 and c1 are not provided")
                 data = {
                     "ai": int(parts[0]),
                     "aj": int(parts[1]),
@@ -927,7 +926,7 @@ class MolTopDihedral(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # in one molecule type, such a section can be defined multiple times
@@ -973,7 +972,7 @@ class MolTopDihedral(BaseModel):
                         "c5": float(parts[10]),
                     }
                 else:
-                    print("Warning: c0 to c5 are not provided")
+                    # print("Warning: c0 to c5 are not provided")
                     data = {
                         "ai": int(parts[0]),
                         "aj": int(parts[1]),
@@ -1064,7 +1063,7 @@ class MolTop(BaseModel):
     dihedrals: Optional[List[MolTopDihedral]] = Field(
         ..., description="Dihedrals in molecule"
     )
-    
+
     @classmethod
     def parser(
         cls,
@@ -1087,7 +1086,7 @@ class MolTop(BaseModel):
             mt_content, "moleculetype"
         )
         if start == -1:
-            print(f"warning: not section moleculetype is found")
+            # print(f"warning: not section moleculetype is found")
             return None
 
         # the moleculetype section is the same level as the other sections
@@ -1127,7 +1126,6 @@ class MolTop(BaseModel):
 
             instance_list.append(MolTop(**data))
         return instance_list
-       
 
 
 # ----------< Aggregation-File Data >---------- #
