@@ -1215,30 +1215,6 @@ class Topology(BaseModel):
             raise ValueError("Molecule topologies already exist in the topology.")
         return self.molecule_topologies
 
-    # --- TBD: sort out molecular topologies/force field parameters.
-    # one ways is to do it here in the class:
-    # loop set(molecule types/names) --> parse the inlines and include_itps
-    # --> filling the MolTop --> add in the molecule_topologies
-    # molecule_types = sort_molecule_types(self.molecules)
-    # call class method MolTop
-    # sort_out_molecule_topologies(molecule_types, self.inlines, self.include_itps)
-    # so the parser should happen in their corresponding data levels.
-    # Summerization level entry of the whole system/content
-    # The Summerization level level, calls and organises aggregation level.
-    # The aggregation/ aggregation-file level handles the real parsing
-    # The base data level. just uses the direct data definiation
-    #
-    # so the parser functions can go as the class methods in the aggregation level?
-    # and the summerization level can call the aggregation level methods to parse the data
-    # and organise the data in the big picture.
-    #
-    # then the aggregation level works like a componennt in React.
-    # the summarnization level works like the main component that calls the sub-components.
-    # and able to pass the data
-    #
-    # Of course, the aggregation level can also have to dump methods to convert or write out the data
-    # Then this is anther call after the parsing, when we already organised the aggregation data.
-    #
 
 
 # ----------< File Parser Function >---------- #
@@ -1497,51 +1473,3 @@ if __name__ == "__main__":
     input_file = "../tests/data/gmx/twolayer_include_itp/system.top"
     sys_top = parse_top_file(input_file)
     demo, demo2 = sys_top.pull_forcefield()
-
-
-# def load_martini_ff_vdw(itp_file):
-#     """
-#     2021-07-07 before, in all the load gmx itp files,
-#     loop lines and break with empty line;
-#     which requires no unnecessary gap lines
-#     === Now then loop the until the next section  [ ] or end
-
-#     target section: [ nonbond_params ]
-
-#     """
-#     itpVdwAtom_list = []
-
-#     itpVdwPair_list = []
-#     with open(itp_file,'r') as f:
-#         data = f.readlines()
-#         index_nonbond = [x for x in range(len(data)) if '[ nonbond_params ]' in data[x].lower()]
-#         index_section = [x for x in range(len(data)) if '[ ' in data[x].lower()]
-#         #print(index_nonbond)
-#         #print(index_section)
-#         start = index_nonbond[0] # section [ nonbond_params ]
-#         try:
-#             end   =  index_section[  index_section.index(start) + 1 ] # section next to [ nonbond_params ]
-#             data_target = data[start:end]
-#         except:
-#             end   =  -1
-#             data_target = data[start:] ### checked already that if put -1; then the last line -1 is not included
-#         #print( start, end)
-
-#         ############### access [ nonbond_params ] section
-#         ### for line in data[start:end]: ## to index_pairs[0] or -1
-#         for line in data_target:
-#             ##print(line )
-#             demoline = line.split()
-#             #print(demoline)
-#             if demoline: ### this is a list,  will filter the empty list, i.e. empty line
-#                 #print(demoline)
-#                 if gmx_record_match(demoline[0]):
-#                     #print(demoline) ### test ok
-#                     vdw_head   = demoline[0]
-#                     vdw_tail   = demoline[1]
-#                     vdw_func   = int(demoline[2])
-#                     vdw_c6     = float(demoline[3])
-#                     vdw_c12    = float(demoline[4])
-#                     itpVdwPair_list.append (ItpVdwPair(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12))
-#                     #print(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12) # test ok
-#     return itpVdwPair_list
