@@ -12,6 +12,7 @@ from moltopolparser.gmx import (
     MolTopDihedral,
     MolForceFieldDihedraltype,
     MolForceField,
+    MolTop,
 )
 
 
@@ -128,15 +129,17 @@ def test_parse_top_file():
     Currently only tested on Martini 2 topologies from the Charmmgui server.
     """
     input_file = "./tests/data/gmx/membrane-martini-charmmgui/system.top"
-    sys_top = parse_top_file(input_file)
-    assert sys_top.system == "Martini system"
+    sys_top_cg = parse_top_file(input_file)
+    assert sys_top_cg.system == "Martini system"
     input_file = "./tests/data/gmx/twolayer_include_itp/system.top"
     sys_top = parse_top_file(input_file)
-    assert len(sys_top.include_itps) == 3
+    assert len(sys_top.include_itps) == 4
     sys_top.pull_forcefield()
     assert isinstance(sys_top.forcefield, MolForceField)
-    # print(sys_top.forcefield)
-    print(sys_top.moleculetypes)
+    demo = sys_top_cg.pull_molecule_topologies()
+    demo = sys_top.pull_molecule_topologies()
+    # print(demo)
+    assert isinstance(sys_top.molecule_topologies[0], MolTop)
 
 
 def test_MolTopAtom():
