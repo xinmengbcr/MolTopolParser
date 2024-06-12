@@ -1,4 +1,10 @@
-![MolTopolParser logo](docs/img/mtp-logo-with-text.jpeg)
+<a href="https://github.com/xinmengbcr/MolTopolParser/">
+  <img src="https://github.com/xinmengbcr/MolTopolParser/blob/main/docs/img/mtp-logo-with-text.jpeg?raw=true" width="200" title="Molecular Topology Parser">
+</a>
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+![build](https://github.com/xinmengbcr/MolTopolParser/workflows/build.yml/badge.svg)
+
 
 **MolTopolParser**, abbreviated for *Molecular Topology Parser*, 
 is a lightweight Python package designed to read and process file 
