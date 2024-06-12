@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+import re
 
 # -----------< Base Data >----------- #
 
@@ -288,7 +289,7 @@ class MolForceFieldBondtype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -360,7 +361,7 @@ class MolForceFieldAngletype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -500,7 +501,7 @@ class MolForceFieldDihedraltype(BaseModel):
         )
 
         if start == -1:
-            print(f"warning: not section {cls.title()} is found")
+            # print(f"warning: not section {cls.title()} is found")
             return None
 
         # the machtching section can be multiple times in the content
@@ -555,6 +556,46 @@ class MolForceFieldDihedraltype(BaseModel):
         return instance_list
 
 
+class MolTopHeader(BaseModel):
+    """
+    Represents the header of the [ moleculetype ] section in a molecule topology.
+    """
+
+    name: str = Field(..., description="Molecule name")
+    nrexcl: int = Field(..., description="Number of exclusions")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "SOL",
+                "nrexcl": 3,
+            }
+        }
+    )
+
+    @classmethod
+    def title(cls) -> str:
+        return "moleculetype"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> "MolTopHeader":
+        """
+        Parse section [ moleculetype ].
+        """
+        start, _, _, _ = find_section_range(content, cls.title())
+        if start == -1:
+            raise ValueError(f"Section [ {cls.title()} ] not found")
+
+        target_line = content[start + 1].strip()
+        parts = target_line.split()
+
+        data = {
+            "name": parts[0],
+            "nrexcl": int(parts[1]),
+        }
+
+        return cls(**data)
+
+
 class MolTopAtom(BaseModel):
     """
     Base class for atom in a molecule topology, defined in [ atoms ] section
@@ -581,6 +622,40 @@ class MolTopAtom(BaseModel):
         }
     )
 
+    @classmethod
+    def title(cls) -> str:
+        return "atoms"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolTopAtom"]:
+        """
+        Parse the full content of the section [ atoms ].
+        """
+        instance_list = []
+        start, end, _, _ = find_section_range(content, cls.title())
+
+        if start == -1:
+            # print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # in one molecule type, such a section is single
+        data_target = content[start + 1 : end]  # +1 to skip [] line
+        for target_line in data_target:
+            target_line = filter_comment(target_line)  # clean ;
+            parts = target_line.split()[:7]
+            data = {
+                "id": int(parts[0]),
+                "atom_type": parts[1],
+                "resnr": int(parts[2]),
+                "residu": parts[3],
+                "atom": parts[4],
+                "cgnr": int(parts[5]),
+                "charge": float(parts[6]),
+            }
+            instance_list.append(cls(**data))
+
+        return instance_list
+
 
 class MolTopBond(BaseModel):
     """
@@ -589,20 +664,85 @@ class MolTopBond(BaseModel):
 
     ai: int = Field(..., description="First atom index")
     aj: int = Field(..., description="Second atom index")
-    func: int = Field(..., description="Bond function")
-    c0: float = Field(..., description="Equilibrium bond length")
-    c1: float = Field(..., description="Bond force constant")
+    func: Optional[int] = Field(1, description="Bond function")
+    c0: Optional[float] = Field(None, description="Equilibrium bond length")
+    c1: Optional[float] = Field(None, description="Bond force constant")
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {
-                "ai": 1,
-                "aj": 2,
-                "func": 1,
-                "c0": 1.0,
-                "c1": 100.0,
-            }
-        }
+            "examples": [
+                {
+                    "ai": 1,
+                    "aj": 2,
+                    "func": 1,
+                    "c0": 1.0,
+                    "c1": 100.0,
+                },
+                {
+                    "ai": 1,
+                    "aj": 2,
+                    "func": 1,
+                },
+                {
+                    "ai": 1,
+                    "aj": 2,
+                },
+            ]
+        },
     )
+
+    @classmethod
+    def title(cls) -> str:
+        return "bonds"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolTopBond"]:
+        """
+        Parse the full content of the section [ bonds ].
+        """
+        instance_list = []
+        start, end, _, _ = find_section_range(content, cls.title())
+
+        if start == -1:
+            # print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # in one molecule type, such a section is single
+        data_target = content[start + 1 : end]  # +1 to skip [] line
+        data = None
+        for target_line in data_target:
+            target_line = filter_comment(target_line)  # clean ;
+            parts = target_line.split()
+            if len(parts) == 5:
+                data = {
+                    "ai": int(parts[0]),
+                    "aj": int(parts[1]),
+                    "func": int(parts[2]),
+                    "c0": float(parts[3]),
+                    "c1": float(parts[4]),
+                }
+            elif len(parts) == 3 or len(parts) == 4:
+                # print("Warning: c0 and c1 are not provided")
+                data = {
+                    "ai": int(parts[0]),
+                    "aj": int(parts[1]),
+                    "func": int(parts[2]),
+                    "c0": None,
+                    "c1": None,
+                }
+            elif len(parts) == 2:
+                # print("Warning: func and c0, c1 are not provided")
+                data = {
+                    "ai": int(parts[0]),
+                    "aj": int(parts[1]),
+                }
+            else:
+                raise ValueError("The bond line is not formatted correctly.")
+
+            if data is not None:
+                instance_list.append(cls(**data))
+                return instance_list
+            else:
+                return None
 
 
 class MolTopPair(BaseModel):
@@ -621,6 +761,35 @@ class MolTopPair(BaseModel):
         }
     )
 
+    @classmethod
+    def title(cls) -> str:
+        return "pairs"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolTopPair"]:
+        """
+        Parse the full content of the section [ pairs ].
+        """
+        instance_list = []
+        start, end, _, _ = find_section_range(content, cls.title())
+
+        if start == -1:
+            # print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # in one molecule type, such a section is single
+        data_target = content[start + 1 : end]
+        for target_line in data_target:
+            target_line = filter_comment(target_line)
+            parts = target_line.split()
+            data = {
+                "ai": int(parts[0]),
+                "aj": int(parts[1]),
+            }
+            instance_list.append(cls(**data))
+
+        return instance_list
+
 
 class MolTopAngle(BaseModel):
     """
@@ -631,8 +800,8 @@ class MolTopAngle(BaseModel):
     aj: int = Field(..., description="Second atom index")
     ak: int = Field(..., description="Third atom index")
     func: int = Field(..., description="Angle function")
-    c0: float = Field(..., description="Equilibrium angle")
-    c1: float = Field(..., description="Angle force constant")
+    c0: Optional[float] = Field(None, description="Equilibrium angle")
+    c1: Optional[float] = Field(None, description="Angle force constant")
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -645,6 +814,50 @@ class MolTopAngle(BaseModel):
             }
         }
     )
+
+    @classmethod
+    def title(cls) -> str:
+        return "angles"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolTopAngle"]:
+        """
+        Parse the full content of the section [ angles ].
+        """
+        instance_list = []
+        start, end, _, _ = find_section_range(content, cls.title())
+
+        if start == -1:
+            # print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # in one molecule type, such a section is single
+        data_target = content[start + 1 : end]
+        for target_line in data_target:
+            target_line = filter_comment(target_line)
+            parts = target_line.split()
+            if len(parts) == 6:
+                data = {
+                    "ai": int(parts[0]),
+                    "aj": int(parts[1]),
+                    "ak": int(parts[2]),
+                    "func": int(parts[3]),
+                    "c0": float(parts[4]),
+                    "c1": float(parts[5]),
+                }
+            else:
+                # print("Warning: c0 and c1 are not provided")
+                data = {
+                    "ai": int(parts[0]),
+                    "aj": int(parts[1]),
+                    "ak": int(parts[2]),
+                    "func": int(parts[3]),
+                    "c0": None,
+                    "c1": None,
+                }
+
+            instance_list.append(cls(**data))
+        return instance_list
 
 
 class MolTopDihedral(BaseModel):
@@ -697,6 +910,85 @@ class MolTopDihedral(BaseModel):
             },
         }
     )
+
+    @classmethod
+    def title(cls) -> str:
+        return "dihedrals"
+
+    @classmethod
+    def from_lines(cls, content: List[str]) -> List["MolTopDihedral"]:
+        """
+        Parse the full content of the section [ dihedrals ].
+        """
+        instance_list = []
+        start, end, idx_section, idx_section_general = find_section_range(
+            content, cls.title()
+        )
+
+        if start == -1:
+            # print(f"warning: not section {cls.title()} is found")
+            return None
+
+        # in one molecule type, such a section can be defined multiple times
+        # for reasoning like split dihedrals by their function type
+        for idx in idx_section:
+            start = idx
+            try:
+                end = idx_section_general[idx_section_general.index(start) + 1]
+                data_target = content[start + 1 : end]
+            except IndexError:
+                end = False
+                data_target = content[start + 1 :]  # Not data[start:-1]
+
+            for target_line in data_target:
+                target_line = filter_comment(target_line)
+                parts = target_line.split()
+                if len(parts) == 8:
+                    data = {
+                        "ai": int(parts[0]),
+                        "aj": int(parts[1]),
+                        "ak": int(parts[2]),
+                        "al": int(parts[3]),
+                        "func": int(parts[4]),
+                        "c0": float(parts[5]),
+                        "c1": float(parts[6]),
+                        "c2": float(parts[7]),
+                        "c3": None,
+                        "c4": None,
+                        "c5": None,
+                    }
+                elif len(parts) == 11:
+                    data = {
+                        "ai": int(parts[0]),
+                        "aj": int(parts[1]),
+                        "ak": int(parts[2]),
+                        "al": int(parts[3]),
+                        "func": int(parts[4]),
+                        "c0": float(parts[5]),
+                        "c1": float(parts[6]),
+                        "c2": float(parts[7]),
+                        "c3": float(parts[8]),
+                        "c4": float(parts[9]),
+                        "c5": float(parts[10]),
+                    }
+                else:
+                    # print("Warning: c0 to c5 are not provided")
+                    data = {
+                        "ai": int(parts[0]),
+                        "aj": int(parts[1]),
+                        "ak": int(parts[2]),
+                        "al": int(parts[3]),
+                        "func": int(parts[4]),
+                        "c0": None,
+                        "c1": None,
+                        "c2": None,
+                        "c3": None,
+                        "c4": None,
+                        "c5": None,
+                    }
+
+                instance_list.append(cls(**data))
+        return instance_list
 
 
 # ----------< Aggregation Data >---------- #
@@ -763,14 +1055,77 @@ class MolTop(BaseModel):
     """
 
     # molecule_type is a dictionary with the molecule name and nrexcl
-    molecule_type: dict[str, int] = Field(..., description="Molecule type")
+    header: MolTopHeader = Field(..., description="Molecule name and nrexcl")
     atoms: List[MolTopAtom] = Field(..., description="Atoms in molecule")
-    bonds: List[MolTopBond] = Field(..., description="Bonds in molecule")
+    bonds: Optional[List[MolTopBond]] = Field(..., description="Bonds in molecule")
     pairs: Optional[List[MolTopPair]] = Field(..., description="Pairs in molecule")
     angles: Optional[List[MolTopAngle]] = Field(..., description="Angles in molecule")
     dihedrals: Optional[List[MolTopDihedral]] = Field(
         ..., description="Dihedrals in molecule"
     )
+
+    @classmethod
+    def parser(
+        cls,
+        content_lines: Optional[List[str]] = None,
+        content_files: Optional[List[str]] = None,
+        molecule_types: Optional[List[str]] = None,
+    ):
+        """
+        Parse the molecule topology from the content_lines or content_files.
+        Different with the force field, the molecule topology can have multiple entries.
+        Since the loop is skipped from the summerization level, thus it is done here.
+        """
+        # instances of the molecule topology
+        instance_list = []
+
+        # contains the whole content of the molecule topology
+        mt_content = clean_lines(content_lines, content_files)
+        # find the sectioln [ moleculetype ]
+        start, end, idx_section, idx_section_general = find_section_range(
+            mt_content, "moleculetype"
+        )
+        if start == -1:
+            # print(f"warning: not section moleculetype is found")
+            return None
+
+        # the moleculetype section is the same level as the other sections
+        # like atoms, bonds, etc.
+        # Here has to extract the whole content of the molecule type
+        # so that the other sections can be parsed.
+        # the machtching section can be multiple times in the content
+        # so we need to loop over idx_section lists
+        # the end should be the next moleculetype or the end lines of the content
+        for idx in idx_section:
+            start = idx
+            try:
+                end = idx_section[idx_section.index(start) + 1]
+                mt_section = mt_content[
+                    start:end
+                ]  # note this one contains the [ moleculetype ]
+            except IndexError:
+                end = False
+                mt_section = mt_content[start:]
+
+            # normal parsing of the molecule type
+            header = MolTopHeader.from_lines(mt_section)
+            atoms = MolTopAtom.from_lines(mt_section)
+            bonds = MolTopBond.from_lines(mt_section)
+            angles = MolTopAngle.from_lines(mt_section)
+            pairs = MolTopPair.from_lines(mt_section)
+            dihedrals = MolTopDihedral.from_lines(mt_section)
+
+            data = {
+                "header": header,
+                "atoms": atoms,
+                "bonds": bonds,
+                "pairs": pairs,
+                "angles": angles,
+                "dihedrals": dihedrals,
+            }
+
+            instance_list.append(MolTop(**data))
+        return instance_list
 
 
 # ----------< Aggregation-File Data >---------- #
@@ -850,33 +1205,16 @@ class Topology(BaseModel):
         include_itps = self.include_itps or []
         if self.molecule_topologies is None:
             self.molecule_topologies = []
-            # TBD: add the molecule type to the molecule topology
-            # for molecule_type in self.moleculetypes:
+            # search for the molecule_topology included in the systems
+            # if self.moleculetypes is not supplied; then all the molecule types
+            # avaliable are included
+            self.molecule_topologies = MolTop.parser(
+                inlines, include_itps, self.moleculetypes
+            )
+        else:
+            raise ValueError("Molecule topologies already exist in the topology.")
+        return self.molecule_topologies
 
-    # --- TBD: sort out molecular topologies/force field parameters.
-    # one ways is to do it here in the class:
-    # loop set(molecule types/names) --> parse the inlines and include_itps
-    # --> filling the MolTop --> add in the molecule_topologies
-    # molecule_types = sort_molecule_types(self.molecules)
-    # call class method MolTop
-    # sort_out_molecule_topologies(molecule_types, self.inlines, self.include_itps)
-    # so the parser should happen in their corresponding data levels.
-    # Summerization level entry of the whole system/content
-    # The Summerization level level, calls and organises aggregation level.
-    # The aggregation/ aggregation-file level handles the real parsing
-    # The base data level. just uses the direct data definiation
-    #
-    # so the parser functions can go as the class methods in the aggregation level?
-    # and the summerization level can call the aggregation level methods to parse the data
-    # and organise the data in the big picture.
-    #
-    # then the aggregation level works like a componennt in React.
-    # the summarnization level works like the main component that calls the sub-components.
-    # and able to pass the data
-    #
-    # Of course, the aggregation level can also have to dump methods to convert or write out the data
-    # Then this is anther call after the parsing, when we already organised the aggregation data.
-    #
 
 
 # ----------< File Parser Function >---------- #
@@ -1060,23 +1398,29 @@ def find_section_range(lines: List[str], section_name: str) -> tuple[int, int]:
     """
     Find the range of a section in the lines.
     """
-    idx_section = [
-        x for x in range(len(lines)) if (f"[ {section_name} ]" in lines[x].lower())
+    pattern = re.compile(rf"\[\s*{re.escape(section_name)}\s*\]", re.IGNORECASE)
+
+    idx_section = [x for x in range(len(lines)) if pattern.search(lines[x])]
+
+    # idx_section_general = [
+    #     x for x in range(len(lines)) if ("[ " in lines[x].lower())
+    # ]
+    idx_section_general = [
+        x for x in range(len(lines)) if re.search(r"\[\s*\w+\s*\]", lines[x].lower())
     ]
-    idx_section_general = [x for x in range(len(lines)) if ("[ " in lines[x].lower())]
+
     try:
         start = idx_section[0]  # section [ section_name ]
     except IndexError:
         start = -1
-        # return and stop
         return start, -1, idx_section, idx_section_general
 
     try:
-        end = idx_section_general[idx_section_general.index(start) + 1]  # next '[' idx
-        # data_target = lines[start:end]
+        next_index = idx_section_general.index(start) + 1
+        end = idx_section_general[next_index]  # next '[' idx
     except IndexError:
-        end = False
-        # data_target = lines[start:]  # Not data[start:-1]
+        end = len(lines)
+
     return start, end, idx_section, idx_section_general
 
 
@@ -1087,9 +1431,10 @@ def clean_lines(
     read lines or files and
     filter out emtpy lines and lines starting *comment_start_sysmbols*
     and remove space and \n
+    - via inlcude the "#", the #define and #ifdef are also removed
     """
     content = []
-    comment_start_sysmbols = (";", "*", "#include")
+    comment_start_sysmbols = (";", "*", "#include", "#")
     if lines is not None and lines != []:
         lines = [
             line.strip()
@@ -1128,51 +1473,3 @@ if __name__ == "__main__":
     input_file = "../tests/data/gmx/twolayer_include_itp/system.top"
     sys_top = parse_top_file(input_file)
     demo, demo2 = sys_top.pull_forcefield()
-
-
-# def load_martini_ff_vdw(itp_file):
-#     """
-#     2021-07-07 before, in all the load gmx itp files,
-#     loop lines and break with empty line;
-#     which requires no unnecessary gap lines
-#     === Now then loop the until the next section  [ ] or end
-
-#     target section: [ nonbond_params ]
-
-#     """
-#     itpVdwAtom_list = []
-
-#     itpVdwPair_list = []
-#     with open(itp_file,'r') as f:
-#         data = f.readlines()
-#         index_nonbond = [x for x in range(len(data)) if '[ nonbond_params ]' in data[x].lower()]
-#         index_section = [x for x in range(len(data)) if '[ ' in data[x].lower()]
-#         #print(index_nonbond)
-#         #print(index_section)
-#         start = index_nonbond[0] # section [ nonbond_params ]
-#         try:
-#             end   =  index_section[  index_section.index(start) + 1 ] # section next to [ nonbond_params ]
-#             data_target = data[start:end]
-#         except:
-#             end   =  -1
-#             data_target = data[start:] ### checked already that if put -1; then the last line -1 is not included
-#         #print( start, end)
-
-#         ############### access [ nonbond_params ] section
-#         ### for line in data[start:end]: ## to index_pairs[0] or -1
-#         for line in data_target:
-#             ##print(line )
-#             demoline = line.split()
-#             #print(demoline)
-#             if demoline: ### this is a list,  will filter the empty list, i.e. empty line
-#                 #print(demoline)
-#                 if gmx_record_match(demoline[0]):
-#                     #print(demoline) ### test ok
-#                     vdw_head   = demoline[0]
-#                     vdw_tail   = demoline[1]
-#                     vdw_func   = int(demoline[2])
-#                     vdw_c6     = float(demoline[3])
-#                     vdw_c12    = float(demoline[4])
-#                     itpVdwPair_list.append (ItpVdwPair(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12))
-#                     #print(vdw_head, vdw_tail, vdw_func, vdw_c6, vdw_c12) # test ok
-#     return itpVdwPair_list

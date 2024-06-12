@@ -1,62 +1,109 @@
-# MolTopolParser 
 
-## Guidelines
-***Purpose of the Modules***
-1. Direct Data Mapping:
-The modules are designed to map data directly to files.
-2. Data Validation and Type Checking: 
-Ensuring that data conforms to expected formats and types.
+---
 
-***Design Considerations***
-1. Data-Oriented Classes:
-Focus on creating classes that are structured around data rather than
-entities with file attributes.
-2. Simplicity for Integration:
-Avoiding entity classes with files as attributes to maintain simplicity
-and facilitate the use of these classes with other tools.
-All data classes are exposed directly to the user.
+# MolTopolParser
 
-***Three Levels of Data Definition***
+**MolTopolParser**, abbreviated for *Molecular Topology Parser*, 
+is a lightweight Python package designed to read and process file 
+formats used in various molecular simulation and modeling software.
 
-- Level 1: Base Data:
+## Overview
 
-Description: Classes at this level represent individual lines of data.
-Purpose: Focuses on the smallest unit of data, providing direct mapping and validation for each line.
+Each module in MolTopolParser handles file formats specific to a type of software.
+All file data is mapped to Pydantic dataclasses, ensuring data conforms to expected formats and types.
+This approach provides a solid foundation for building simulation or pipeline tools,
+while maintaining simplicity and facilitating integration with other tools.
 
-- Level 2: Aggregation Data:
+## Features
 
-Description: Classes at this level represent sections of lines.
-Purpose: Groups lines into meaningful sections for easier management and processing.
+- **Modular Design**: Each module corresponds to a specific software's file formats.
+- **Pydantic Dataclasses**: Ensures data validation and type checking.
+- **Class Methods for Parsing**: Includes parser functions as class methods for accessing and processing files.
+- **Exposed Modules and Dataclasses**: All modules and their contained dataclasses are accessible.
 
-- Level 2: Aggregation-File Data:
+## Data Hierarchy Model
 
-Description: Classes at this level represent the entire file, without additional attached data.
-Purpose: Manages the file as a complete entity, ensuring the integrity and structure of the whole file.
+MolTopolParser provides a **three-level data abstraction model** to manage the hierarchical nature of simulation data:
 
-- Level 3: Summarization Data:
+### Level 1: **Base Data**
+Classes at this level represent individual lines in a file.
+They focus on the smallest unit of data,
+providing direct mapping and validation for each line.
 
-Description: Classes at this level represent summarized information of the entire content.
-Purpose: Provides an entry point to access the whole involved content.
+### Level 2: **Aggregation Data** (or **Aggregation-File Data**)
+Classes at this level represent a whole section of lines,
+which could be stored in a standalone file.
+They group Base Data lines into meaningful sections for easier management and processing.
+
+### Level 3: **Summarization Data**
+Classes at this top level usually correspond to an entry or summary file.
+They gather all available data and provide access to the entire content.
+
+## Data Flow Logic
+
+- **Data Declaration and Organization**: From top-down.
+- **Data Acquisition and Validation**: From bottom-up.
+
+The parsing occurs at their corresponding data levels:
+
+- **Summarization Level**: Acts as the entry point for the entire system/content.
+  It calls and organizes data from the aggregation level.
+- **Aggregation Level**: Handles the actual parsing. 
+  It functions like a component in a framework,
+  being called by the summarization level to parse and organize data.
+- **Base Data Level**: Corresponds to the most basic data records.
+
+Parser functions are included as class methods at the aggregation level,
+while the summarization level calls these methods to parse and organize data.
+Additionally, the aggregation level can include methods to convertor write out the data after parsing,
+once the data is organized.
+
+---
+
+By following this structure, MolTopolParser aims to provide a clear and efficient way to manage and process molecular simulation data.
+
+---
 
 
 
-***dependencies***
-- pydantic 
-- numpy 
+## User Guild 
 
-***test***
-- make installable: prepare setup.py; pip install -e .
-- example test command line: pytest tests/test_gmx.py -v -s
+Detailed installation and user guide, together with comprehensive example simulations are located in __link__
+
+> example of calling the package module and dataclasses.
 
 
-***setup for developing*** 
+
+#### Installation 
+
+```bash 
+git clone FOLDER
+pip install -r requirements.txt
+pip install -e .
+```
+
+#### Dependencies
 ```text
+pydantic 
+numpy 
+```
+
+#### Setup for Developing
+```bash
 cd MolTopolParser
 python -m venv .venv 
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e .
+# run test
+pytest tests/test_gmx.py -v -s
 ```
 
+-----
 
+<!-- # loop set(molecule types/names) -parse the inlines and include_itps
+
+
+
+# -->
