@@ -9,3 +9,6 @@ nav:
   - Getting Started: index.md
   - Install: install.md
   - Example: example.md
+
+# mkdocs serve
+# mkdocs deploy 
