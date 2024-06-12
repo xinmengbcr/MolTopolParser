@@ -1,5 +1,5 @@
 <a href="https://github.com/xinmengbcr/MolTopolParser/">
-  <img src="https://github.com/xinmengbcr/MolTopolParser/blob/main/docs/img/mtp-logo-with-text.jpeg?raw=true" width="200" title="Molecular Topology Parser">
+  <img src="https://github.com/xinmengbcr/MolTopolParser/blob/main/docs/img/mtp-logo-with-text.jpeg?raw=true" width="250" title="Molecular Topology Parser">
 </a>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -61,12 +61,6 @@ while the summarization level calls these methods to parse and organize data.
 Additionally, the aggregation level can include methods to convertor write out the data after parsing,
 once the data is organized.
 
----
-
-By following this structure, MolTopolParser aims to provide a clear and efficient way to manage and process molecular simulation data.
-
----
-
 
 
 ## User Guild 
@@ -104,9 +98,3 @@ pytest tests/test_gmx.py -v -s
 ```
 
 -----
-
-<!-- # loop set(molecule types/names) -parse the inlines and include_itps
-
-
-
-# -->
