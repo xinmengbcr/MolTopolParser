@@ -10,7 +10,7 @@ with open("CHANGELOG.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='moltopolparser',
-    version='0.0.1a2',
+    version='0.0.1a1',
     author="Xinmeng Li",
     author_email="xinmeng@bocores.com",
     description="A lightweight package to parse and process molecular simulation files",
