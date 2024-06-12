@@ -1,7 +1,4 @@
-
----
-
-# MolTopolParser
+![MolTopolParser logo](docs/img/mtp-logo-with-text.jpeg)
 
 **MolTopolParser**, abbreviated for *Molecular Topology Parser*, 
 is a lightweight Python package designed to read and process file 
