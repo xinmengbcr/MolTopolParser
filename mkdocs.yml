@@ -1,0 +1,11 @@
+site_name: MolTopolParser
+
+theme:
+   name: 'material'
+   palette:
+        primary: 'teal'
+
+nav:
+  - Getting Started: index.md
+  - Install: install.md
+  - Example: example.md
