@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='moltopolparser',
-    version='0.0.3',
+    version='0.0.1a1',
     author="Xinmeng Li",
     author_email="xinmeng@bocores.com",
     description="A lightweight package to parse and process molecular simulation files",
