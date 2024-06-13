@@ -1,12 +1,10 @@
-# Install 
+Installation is as simple as:
 
-## from source
-> pass 
+```bash
+pip install moltopolparser
+```
 
-## pip
-> pass 
+MolTopolParser has a few dependencies:
 
-
-## for developer 
-
-> pass 
+* [pydantic](https://pypi.org/project/pydantic/)
+* [numpy](https://pypi.org/project/numpy/)

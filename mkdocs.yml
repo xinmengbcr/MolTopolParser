@@ -3,12 +3,21 @@ site_name: MolTopolParser
 theme:
    name: 'material'
    palette:
-        primary: 'teal'
+        primary: 'indigo'
 
 nav:
   - Getting Started: index.md
   - Install: install.md
   - Example: example.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 # mkdocs serve
 # mkdocs deploy 
