@@ -1,4 +1,5 @@
 site_name: MolTopolParser
+site_url: http://moltopolparser.bocores.com
 
 theme:
    name: 'material'
