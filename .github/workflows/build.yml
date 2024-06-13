@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+    paths:
+      - 'moltopolparser/**'
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   build:
