@@ -1,7 +1,12 @@
 name: Run Unit Test via Pytest  
   
-on: [push]  
-  
+on: 
+  push:
+    branches:
+        - main
+    paths:
+      - 'moltopolparser/**'
+      - 'tests/**'    
 jobs:  
   build:  
     runs-on: ubuntu-latest  
