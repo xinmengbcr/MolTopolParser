@@ -12,7 +12,9 @@ or data used in various molecular simulation and modeling software.
 Full code on [github](https://github.com/xinmengbcr/MolTopolParser).
 
 
-[Installing MolTopolParser](install.md) is as simple as: `pip install moltopolparser`
+[Installing MolTopolParser](install.md) is as simple as: 
+
+`pip install moltopolparser`
 
 Light dependences:
 
@@ -39,13 +41,14 @@ simulation tools and pipelines.
     There are other more suitable packages like:
     [Biopython ](https://biopython.org/), [MDAanalysis](https://www.mdanalysis.org/)..
 
-## Three-level data abstraction model
-MolTopolParser provides a **three-level data abstraction model** to manage the hierarchical data.
-
-
 ## How does it work
 
-Let's see the hierarchical structure formats in **Gromacs** molecular dynamics simulation software. 
+MolTopolParser provides a **three-level data abstraction model** to manage the hierarchical data.
+
+> ADD DETAILS
+
+
+Let's see one example of hierarchical structure formats from **Gromacs**. 
 !!! example 
     === "Demo Gromacs Topologies"
         
@@ -55,7 +58,6 @@ Let's see the hierarchical structure formats in **Gromacs** molecular dynamics s
         ├── step5_charmm2gmx.pdb
         ├── system.top
         └── toppar
-            ├── martini_v2.0_ions.itp
             ├── martini_v2.0_lipids_all_201506.itp
             └── martini_v2.2.itp
         ```
@@ -84,7 +86,7 @@ Let's see the hierarchical structure formats in **Gromacs** molecular dynamics s
         CL 9
         ```
 
-    === "toppar/martini_v2.2.itp"
+    === "martini_v2.2.itp"
         ```text
 
         [ defaults ]
@@ -98,20 +100,43 @@ Let's see the hierarchical structure formats in **Gromacs** molecular dynamics s
 
         [ nonbond_params ]
         ; i j	funda c6 c12 
-        ; self terms
-        P5 	P5 	1 	0.24145E-00 	0.26027E-02 ; supra attractive
+        P5 	    5 	    1 	0.24145E-00 	0.26027E-02 ; supra attractive
         SP5 	SP5 	1 	0.10620E-00 	0.67132E-03 ; 75supra attractive, s=0.43
         ...
 
+        [ moleculetype ]
+        ; molname  	nrexcl
+        W 	    	1
+
+        [ atoms ]
+        ;id 	type 	resnr 	residu 	atom 	cgnr 	charge
+        1 	P4 	1 	W 	W 	1 	0 
+        ...
+
+        ```
+    === "martini_v2.0_lipids_all_201506.itp"
+        ```text
+        [moleculetype]
+        ; molname      nrexcl
+        DAPC          1
+
+        [atoms]
+        ; id 	type 	resnr 	residu 	atom 	cgnr 	charge
+        1 	Q0 	 1 	DAPC 	NC3 	 1 	1.0 	
+        2 	Qa 	 1 	DAPC 	PO4 	 2 	-1.0 	
+        ...
+        [bonds]
+        ;  i  j 	funct 	length 	force.c.
+        1  2 	1 	0.47 	1250 
+        ...
+        [angles]
+        ;  i  j  k 	funct 	angle 	force.c.
+        2  3  4 	2 	120.0 	25.0 	
+        ...
         ```
 
-        Phasellus posuere in sem ut cursus (1)
-        { .annotate }
 
-        1.  :woman_raising_hand: I'm an annotation as well!
-
-
-
+<!-- 
 ```python
 import moltopolparser as mtp
 
@@ -128,7 +153,7 @@ atom_data = {
 atom = mtp.gmx.MolTopAtom(**atom_data)
 print(atom.charge)
 
-```
+``` -->
 
 
 
@@ -136,10 +161,6 @@ print(atom.charge)
 <!-- ## Concepts  -->
 
 <!-- ## Why MolTopolParser -->
-
-
-<!-- ## Install -->
-    <!-- pip install moltopolparser -->
 
 <!-- ## Dependencies -->
 <!-- * [pydantic](https://pypi.org/project/pydantic/) -->
