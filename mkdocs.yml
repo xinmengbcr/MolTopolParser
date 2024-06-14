@@ -3,9 +3,16 @@ site_url: https://moltopolparser.bocores.com
 
 theme:
    name: 'material'
+   
+   logo: 'img/mtp-logo-small-white.svg'
+   favicon: 'img/favicon.ico'
+
    palette:
         primary: 'indigo'
 
+extra_css:
+  - css/custom.css
+  
 nav:
   - Getting Started: index.md
   - Install: install.md
@@ -19,6 +26,10 @@ markdown_extensions:
   - md_in_html
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
 
 # mkdocs serve
 # mkdocs deploy 

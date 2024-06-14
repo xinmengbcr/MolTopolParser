@@ -1,4 +1,15 @@
-# MolTopolParser
+<!-- # MolTopolParser -->
+<style>
+.hidden-title {
+    display: none;
+}
+</style>
+
+<h1 class="hidden-title">MolTopolParser</h1>
+
+<div class="grid" markdown>
+  ![MolTopolParser Logo](/img/mtp-logo-with-text.jpeg){ align=left style="width:250px"}
+</div>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 ![Build Status](https://github.com/xinmengbcr/MolTopolParser/actions/workflows/build.yml/badge.svg)
@@ -9,19 +20,15 @@
 **MolTopolParser**, abbreviated for *Molecular Topology Parser*, 
 is a lightweight Python package designed to access, validate and process file 
 or data used in various molecular simulation and modeling software.
-Full code on [github](https://github.com/xinmengbcr/MolTopolParser).
 
+- Full code on [github](https://github.com/xinmengbcr/MolTopolParser).
 
-[Installing MolTopolParser](install.md) is as simple as: 
+- [Installing](install.md) is simple: `pip install moltopolparser`
 
-`pip install moltopolparser`
-
-Light dependences:
-
-* [pydantic](https://pypi.org/project/pydantic/)
-
-* [numpy](https://pypi.org/project/numpy/)
- 
+- Light dependences:
+    - [pydantic](https://pypi.org/project/pydantic/)
+    - [numpy](https://pypi.org/project/numpy/)
+   
 
 ## When To Use
 MolTopolParser is designed for developers to manage hierarchical data 
