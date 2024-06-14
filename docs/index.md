@@ -50,9 +50,62 @@ simulation tools and pipelines.
 
 ## How does it work
 
-MolTopolParser provides a **three-level data abstraction model** to manage the hierarchical data.
 
-> ADD DETAILS
+<!-- 
+When front-end developers talk about code, it’s most often in the context of designing interfaces for the web. And the way we think of interface composition is in elements, like buttons, lists, navigation, and the likes. React provides an optimized and simplified way of expressing interfaces in these elements. It also helps build complex and tricky interfaces by organizing your interface into three key concepts— components, props, and state. -->
+
+There could be various type of files involved in a molecular simulation project, for example in a molecular dynamics simulation project, there should be a coordinate file storing the atomic coordinates as the initial structure, a topology file contains system information, force field files storing the force field parameters, and so on.
+
+An effcient way to think of these files as composition of blocks of well-defined information. 
+
+[make a figure like this]
+
+MolTopolParser is designed with a composition focus and provides an easy way to access and manipulate these blocks of information, utilizing a three-level data abstraction model. 
+
+- Level 1: **Base Data**
+Classes at this level represent individual lines in a file.
+They focus on the smallest unit of data,
+providing direct mapping and validation for each line.
+
+- Level 2: **Aggregation Data** (or **Aggregation-File Data**)
+Classes at this level represent a whole section of lines,
+which could be stored in a standalone file.
+They group Base Data lines into meaningful sections for easier management and processing.
+
+- Level 3: **Summarization Data**
+Classes at this top level usually correspond to an entry or summary file.
+They gather all available data and provide access to the entire content.
+
+***Data Flow Logic***
+
+- **Data Declaration and Organization**: From top-down.
+- **Data Acquisition and Validation**: From bottom-up.
+
+The parsing occurs at their corresponding data levels:
+
+- **Summarization Level**: Acts as the entry point for the entire system/content.
+  It calls and organizes data from the aggregation level.
+- **Aggregation Level**: Handles the actual parsing. 
+  It functions like a component in a framework,
+  being called by the summarization level to parse and organize data.
+- **Base Data Level**: Corresponds to the most basic data records.
+
+Parser functions are included as class methods at the aggregation level,
+while the summarization level calls these methods to parse and organize data.
+Additionally, the aggregation level can include methods to convertor write out the data after parsing,
+once the data is organized.
+
+
+
+!!! tip "Think in React"
+    In essence, these level of abstraction can be all treated as __components__ in React's term. 
+    Thus these levels  intbeween are just parent components and child components.
+    Thus these are these data passing logic between parent and child components: 
+    <!-- - `props` for passing data from parent to child
+    - `state` for managing data in a component
+    - `context` for passing data through the component tree without having to pass the props down manually at every level.
+     -->
+
 
 
 Let's see one example of hierarchical structure formats from **Gromacs**. 
