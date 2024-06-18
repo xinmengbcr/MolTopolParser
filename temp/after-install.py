@@ -21,14 +21,14 @@ atom_data = {
         "cgnr": 1,
         "charge": -0.683,
 }
-### 
-from moltopolparser.gmx import GroAtom
-from moltopolparser.gmx import MolTopAtom
-atom_instance =  GroAtom(**example_data)
-print(atom_instance)
-atom_instance2 = MolTopAtom(**atom_data)
-print(atom_instance2)
-### 
+# ### 
+# from moltopolparser.gmx import GroAtom
+# from moltopolparser.gmx import MolTopAtom
+# atom_instance =  GroAtom(**example_data)
+# print(atom_instance)
+# atom_instance2 = MolTopAtom(**atom_data)
+# print(atom_instance2)
+# ### 
 import moltopolparser as mtp
 atom_instance = mtp.gmx.GroAtom(**example_data)
 atom_instance2 = mtp.gmx.MolTopAtom(**atom_data)

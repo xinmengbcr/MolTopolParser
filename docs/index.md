@@ -56,9 +56,11 @@ simulation tools and pipelines.
 
 
 ```python
+# file ./temp/demo.py 
+
 import moltopolparser as mtp
 
-# ----------------------------- Base data direct validation
+# Base data direct validation
 atom_data = {
         "id": 10,
         "atom_type": "C",
@@ -69,25 +71,24 @@ atom_data = {
         "charge": -0.683,
     }
 atom = mtp.gmx.MolTopAtom(**atom_data)
-print(atom.charge)
+print(atom.charge) 
 
-# -------------------------  Access via parsing a single file
-gro_file = './tests/data/gmx/two_water.gro'
-gro = mtp.gmx.GroFile.parse(gro_file)
+# Access via parsing a single file
+gro_file = '../tests/data/gmx/two_water.gro'
+gro = mtp.gmx.GroFile.parser(gro_file)
 print(gro.box_size)
 
-
-# ----------------------- Access via parsing top files, see example file below
-top_file = './tests/data/gmx/membrane-martini-charmmgui/system.top'
+# Access via parsing top files, see example file below
+top_file = '../tests/data/gmx/membrane-martini-charmmgui/system.top'
 sys_top = mtp.gmx.Topology.parser(top_file)
-print(sys_top.system)
+print(sys_top.system) 
 
 sys_top.pull_forcefield()
-print(sys_top.forcefield.atomtypes)
+print(sys_top.forcefield.atomtypes[0]) 
+# -> name='P5' at_num=None mass=72.0 charge=0.0 ptype='A' sigma=0.0 epsilon=0.0
 
 sys_top.pull_molecule_topologies()
-print(sys_top.molecule_topologies)
-
+print(sys_top.molecule_topologies[0])
 ```
 
 !!! example "Example of Gromacs simulation"
@@ -230,22 +231,15 @@ data organisation.
 Such property passing from parent to child component is 
 vital in MolTopolParser. 
 
-In our TOC model: 
+In the TOC model: 
 :one: **Summary** level's classmethod acts as the entry point for the entire `content`. 
 after finishing simple parsing for *mandatory* properties, it will 
 return a component instance. :two: The instance can pass the `content` to classmethods at the **Aggregation** level 
-and delegate the parsing task. :three:  Similarly, the same logic happens in between  **Aggregation** and **Base** levels. 
+and delegate the parsing task. :three:  Such logic continues in between  **Aggregation** and **Base** levels. 
 
 
+## Contrubuting 
 
-<!-- ## Concepts  -->
+Problems? Idea? Want to contribute a new module? 
 
-<!-- ## Why MolTopolParser -->
-
-<!-- ## Dependencies -->
-<!-- * [pydantic](https://pypi.org/project/pydantic/) -->
-<!-- * [numpy](https://pypi.org/project/numpy/) -->
- 
-
-<!-- ## Example -->
-<!-- > pass  -->
+All welcome. Submit issue. See developer's guidence. 

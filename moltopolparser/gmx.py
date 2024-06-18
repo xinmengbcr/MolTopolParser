@@ -110,12 +110,34 @@ class MolForceFieldAtomtype(BaseModel):
     """
 
     name: str = Field(..., description="Atom type")
-    at_num: Optional[int] = Field(..., description="Atomic number")
+    at_num: Optional[int] = Field(None, description="Atomic number")
     mass: float = Field(..., description="Atom mass")
     charge: float = Field(..., description="Charge")
-    ptype: Optional[str] = Field(..., description="Particle type")
+    ptype: str = Field(..., description="Particle type")
     sigma: float = Field(..., description="Sigma")
     epsilon: float = Field(..., description="Epsilon")
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [{
+                "name": "C",
+                "at_num": 6,
+                "mass": 12.01,
+                "charge": 0.0000,
+                "ptype": "A",
+                "sigma": 3.39967e-01,
+                "epsilon": 3.59824e-01,
+            },
+              {
+                "name": "P5",
+                "mass": 72.0,
+                "charge": 0.000,
+                "ptype": "A",
+                "sigma": 0.0,
+                "epsilon": 0.0,
+            }]
+        },
+    )
 
     @classmethod
     def title(cls) -> str:
