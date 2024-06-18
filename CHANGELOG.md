@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - Fixed a bug where ...
 
+## [0.0.1a2] - 2024-06-18
+
+### Fixed
+- parser functions into classmethods
+- updating docs 
 
 ## [0.0.1a1] - 2024-06-12
 
