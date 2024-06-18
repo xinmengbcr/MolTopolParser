@@ -1128,8 +1128,7 @@ class MolTop(BaseModel):
         return instance_list
 
 
-# ----------< Aggregation-File Data >---------- #
-
+# ----------< Aggregation Data >---------- #
 
 class GroFile(BaseModel):
     """
@@ -1145,8 +1144,61 @@ class GroFile(BaseModel):
     gro_atoms: List[GroAtom] = Field(..., description="List of atoms")
     box_size: List[float] = Field(..., description="Box size")
 
-    # TBD: Add dump method to write the gro file, or convert to other formats
-
+    @classmethod
+    def parser(cls, file: str):
+        """
+        Parse a Gromacs .gro file and return a GroFile class instance.
+        Example of Gro file:
+        --------
+        MD of 2 waters, t= 0.0
+            6
+            1WATER  OW1    1   0.126   1.624   1.679  0.1227 -0.0580  0.0434
+            1WATER  HW2    2   0.190   1.661   1.747  0.8085  0.3191 -0.7791
+            1WATER  HW3    3   0.177   1.568   1.613 -0.9045 -2.6469  1.3180
+            2WATER  OW1    4   1.275   0.053   0.622  0.2519  0.3140 -0.1734
+            2WATER  HW2    5   1.337   0.002   0.680 -1.0641 -1.1349  0.0257
+            2WATER  HW3    6   1.326   0.120   0.568  1.9427 -0.8216 -0.0244
+        1.82060   1.82060   1.82060
+        ---------
+        """
+        _skip_lines = 2  # The first two lines are not atoms
+        with open(file, encoding="utf-8") as f:
+            lines = f.readlines()
+            num_atoms = int(lines[1])
+            box_size = np.array(
+                lines[_skip_lines + num_atoms].strip("\n").lstrip().split(), dtype=float
+            )
+        gro_atoms: List[GroAtom] = []
+        for line in lines[_skip_lines: _skip_lines + num_atoms]:
+            line_length = len(line)
+            atom_data = {
+                "resid": int(line[:5]),
+                "resname": line[5:10].strip(),
+                "atom_name": line[10:15].strip(),
+                "index": int(line[15:20]),
+                "x": float(line[20:28]),
+                "y": float(line[28:36]),
+                "z": float(line[36:44]),
+            }
+            if line_length == 69:
+                atom_data["vx"] = float(line[44:52])
+                atom_data["vy"] = float(line[52:60])
+                atom_data["vz"] = float(line[60:68])
+            gro_atoms.append(GroAtom(**atom_data))
+            if line_length not in (45, 69):
+                raise ValueError(
+                    f"Gro file line not formatted correctly:\n"
+                    f"{line}"
+                    "The line length is {line_length} "
+                    "while it should be 45 for a gro file containing positions"
+                    "or 69 containing both positions and velocities."
+                )
+        return GroFile(
+            sys_name=lines[0].strip("\n"),
+            num_atoms=num_atoms,
+            gro_atoms=gro_atoms,
+            box_size=box_size.tolist(),
+        )
 
 # ----------< Summarization Data >---------- #
 
@@ -1214,181 +1266,122 @@ class Topology(BaseModel):
         else:
             raise ValueError("Molecule topologies already exist in the topology.")
         return self.molecule_topologies
+        
+    @classmethod
+    def parser(cls, filename: str):
+        """
+        Parse a Gromacs .top file and return a dictionary of the
+        [ system ] and [ molecules ] section.
 
+        Warnining: current version works with the file format from the
+        Martini 2 force field from the Charmm-GUI server;
+        Others to be added
 
+        Example of Top file:
+        --------
+        #include "toppar/martini_v2.2.itp"
+        #include "toppar/martini_v2.0_lipids_all_201506.itp"
+        #include "toppar/martini_v2.0_ions.itp"
 
-# ----------< File Parser Function >---------- #
+        [ system ]
+        ; name
+        Martini system
 
+        [ molecules ]
+        ; name        number
+        DOPC 2
+        DPPC 1
+        DOPC 5
+        --------
 
-def parse_gro_file(input_file: str) -> GroFile:
-    """
-    Parse a Gromacs .gro file and return a GroFile class instance.
-    Example of Gro file:
-    --------
-    MD of 2 waters, t= 0.0
-        6
-        1WATER  OW1    1   0.126   1.624   1.679  0.1227 -0.0580  0.0434
-        1WATER  HW2    2   0.190   1.661   1.747  0.8085  0.3191 -0.7791
-        1WATER  HW3    3   0.177   1.568   1.613 -0.9045 -2.6469  1.3180
-        2WATER  OW1    4   1.275   0.053   0.622  0.2519  0.3140 -0.1734
-        2WATER  HW2    5   1.337   0.002   0.680 -1.0641 -1.1349  0.0257
-        2WATER  HW3    6   1.326   0.120   0.568  1.9427 -0.8216 -0.0244
-       1.82060   1.82060   1.82060
-    ---------
-    """
-    _skip_lines = 2  # The first two lines are not atoms
-    with open(input_file, encoding="utf-8") as f:
-        lines = f.readlines()
-        num_atoms = int(lines[1])
-        box_size = np.array(
-            lines[_skip_lines + num_atoms].strip("\n").lstrip().split(), dtype=float
-        )
-    gro_atoms: List[GroAtom] = []
-    for line in lines[_skip_lines : _skip_lines + num_atoms]:
-        line_length = len(line)
-        atom_data = {
-            "resid": int(line[:5]),
-            "resname": line[5:10].strip(),
-            "atom_name": line[10:15].strip(),
-            "index": int(line[15:20]),
-            "x": float(line[20:28]),
-            "y": float(line[28:36]),
-            "z": float(line[36:44]),
-        }
-        if line_length == 69:
-            atom_data["vx"] = float(line[44:52])
-            atom_data["vy"] = float(line[52:60])
-            atom_data["vz"] = float(line[60:68])
-        gro_atoms.append(GroAtom(**atom_data))
-        if line_length not in (45, 69):
-            raise ValueError(
-                f"Gro file line not formatted correctly:\n"
-                f"{line}"
-                "The line length is {line_length} "
-                "while it should be 45 for a gro file containing positions"
-                "or 69 containing both positions and velocities."
-            )
-    return GroFile(
-        sys_name=lines[0].strip("\n"),
-        num_atoms=num_atoms,
-        gro_atoms=gro_atoms,
-        box_size=box_size.tolist(),
-    )
+        General rule of searching a section in the file:
+        SECTION_NAME = "system"
+        Then the section is found by searching for the line
+        "[ system ]" or other capitalized version of the section name.
+        or with or without space with the brackets.
 
+        The next none empty line that does not start with ;
+        is the value of the section.
+        """
+        system_molecules = []
+        itp_paths = []
+        with open(filename, "r", encoding="utf-8") as infile:
+            lines = infile.readlines()
+            # clean data; throw the lines that start with ; or empty lines
+            lines = [
+                line.strip() for line in lines if not line.startswith(";") and line.strip()
+            ]
+            # deepcopy of the lines
+            inlines = lines.copy()
 
-def parse_top_file(filename: str) -> tuple[dict[str, int], list[str]]:
-    """
-    Parse a Gromacs .top file and return a dictionary of the
-    [ system ] and [ molecules ] section.
+            # look for the section [ system ]
+            start, _, _, _ = find_section_range(lines, "system")
+            system_name = lines[start + 1]
+            inlines.remove(lines[start])
+            inlines.remove(lines[start + 1])
 
-    Warnining: current version works with the file format from the
-    Martini 2 force field from the Charmm-GUI server;
-    Others to be added
+            # look for the section [ molecules ]
+            start, end, _, _ = find_section_range(lines, "molecules")
+            data_target = lines[start + 1: end] if end else lines[start + 1:]
+            for line in data_target:
+                molname, molnum = line.split()[:2]
+                system_molecules.append({molname: int(molnum)})
 
-    Example of Top file:
-    --------
-    #include "toppar/martini_v2.2.itp"
-    #include "toppar/martini_v2.0_lipids_all_201506.itp"
-    #include "toppar/martini_v2.0_ions.itp"
-
-    [ system ]
-    ; name
-    Martini system
-
-    [ molecules ]
-    ; name        number
-    DOPC 2
-    DPPC 1
-    DOPC 5
-    --------
-
-    General rule of searching a section in the file:
-    SECTION_NAME = "system"
-    Then the section is found by searching for the line
-    "[ system ]" or other capitalized version of the section name.
-    or with or without space with the brackets.
-
-    The next none empty line that does not start with ;
-    is the value of the section.
-    """
-    system_molecules = []
-    itp_paths = []
-    with open(filename, "r", encoding="utf-8") as infile:
-        lines = infile.readlines()
-        # clean data; throw the lines that start with ; or empty lines
-        lines = [
-            line.strip() for line in lines if not line.startswith(";") and line.strip()
-        ]
-        # deepcopy of the lines
-        inlines = lines.copy()
-
-        # look for the section [ system ]
-        start, _, _, _ = find_section_range(lines, "system")
-        system_name = lines[start + 1]
-        inlines.remove(lines[start])
-        inlines.remove(lines[start + 1])
-
-        # look for the section [ molecules ]
-        start, end, _, _ = find_section_range(lines, "molecules")
-        data_target = lines[start + 1 : end] if end else lines[start + 1 :]
-        for line in data_target:
-            molname, molnum = line.split()[:2]
-            system_molecules.append({molname: int(molnum)})
-
-        # remove the lines inside the data_target and the header line
-        for line in data_target:
-            inlines.remove(line)
-        inlines.remove(lines[start])
-
-        # look for the included files, lines starting with #
-        target_lines = [line for line in lines if line.startswith("#include")]
-        if target_lines:
-            for line in target_lines:
-                # get rid of the inline comments that starts with ;
-                line_wo_comment = line.split(";")[0]
-                path = line_wo_comment.split()[1]
-                if path is not None:
-                    itp_paths.append(
-                        f"{os.path.dirname(os.path.abspath(filename))}/{path[1:-1]}"
-                    )  # strip sorrounding quotes
-                # remove the lines inside the target_lines
+            # remove the lines inside the data_target and the header line
+            for line in data_target:
                 inlines.remove(line)
-        else:
-            itp_paths = None
+            inlines.remove(lines[start])
 
-        # second layer of #include files
-        # this helps to get the ffnonbonded.itp or ffbonded.itp
-        # inside a forcefield.itp
-        for itp_path in itp_paths.copy():
-            with open(itp_path, "r", encoding="utf-8") as itpfile:
-                itplines = itpfile.readlines()
-                itplines = [
-                    line.strip() for line in itplines if not line.startswith(";")
-                ]
-                target_lines = [
-                    line for line in itplines if line.startswith("#include")
-                ]
-                if target_lines:
-                    for line in target_lines:
-                        # get rid of the inline comments that starts with ;
-                        line_wo_comment = line.split(";")[0]
-                        path = line_wo_comment.split()[1]
-                        if path is not None:
-                            itp_paths.append(
-                                f"{os.path.dirname(os.path.abspath(itp_path))}/{path[1:-1]}"
-                            )  # strip sorrounding quotes
+            # look for the included files, lines starting with #
+            target_lines = [line for line in lines if line.startswith("#include")]
+            if target_lines:
+                for line in target_lines:
+                    # get rid of the inline comments that starts with ;
+                    line_wo_comment = line.split(";")[0]
+                    path = line_wo_comment.split()[1]
+                    if path is not None:
+                        itp_paths.append(
+                            f"{os.path.dirname(os.path.abspath(filename))}/{path[1:-1]}"
+                        )  # strip sorrounding quotes
+                    # remove the lines inside the target_lines
+                    inlines.remove(line)
+            else:
+                itp_paths = None
 
-        if not inlines:
-            inlines = None
+            # second layer of #include files
+            # this helps to get the ffnonbonded.itp or ffbonded.itp
+            # inside a forcefield.itp
+            for itp_path in itp_paths.copy():
+                with open(itp_path, "r", encoding="utf-8") as itpfile:
+                    itplines = itpfile.readlines()
+                    itplines = [
+                        line.strip() for line in itplines if not line.startswith(";")
+                    ]
+                    target_lines = [
+                        line for line in itplines if line.startswith("#include")
+                    ]
+                    if target_lines:
+                        for line in target_lines:
+                            # get rid of the inline comments that starts with ;
+                            line_wo_comment = line.split(";")[0]
+                            path = line_wo_comment.split()[1]
+                            if path is not None:
+                                itp_paths.append(
+                                    f"{os.path.dirname(os.path.abspath(itp_path))}/{path[1:-1]}"
+                                )  # strip sorrounding quotes
 
-        # sum up the data
-        top_data = {
-            "system": system_name,
-            "molecules": system_molecules,
-            "include_itps": itp_paths,
-            "inlines": inlines,
-        }
-        return Topology(**top_data)
+            if not inlines:
+                inlines = None
+
+            # sum up the data
+            top_data = {
+                "system": system_name,
+                "molecules": system_molecules,
+                "include_itps": itp_paths,
+                "inlines": inlines,
+            }
+            return Topology(**top_data)
+
 
 
 # ----------< Helper function >---------- #

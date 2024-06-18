@@ -6,8 +6,8 @@ from pydantic import ValidationError
 
 from moltopolparser.gmx import (
     GroAtom,
-    parse_gro_file,
-    parse_top_file,
+    GroFile,
+    Topology,
     MolTopAtom,
     MolTopDihedral,
     MolForceFieldDihedraltype,
@@ -93,7 +93,7 @@ def test_parse_gro_atom_error():
         GroAtom(**example_data_error)
 
 
-def test_parse_gro_file():
+def test_GroFile():
     """
     Test case for parsing a GRO file contains two water molecules.
     """
@@ -104,7 +104,7 @@ def test_parse_gro_file():
     ]
     for file_name in file_names:
         input_file = f"./tests/data/gmx/{file_name}"
-        gro_file = parse_gro_file(input_file)
+        gro_file = GroFile.parser(input_file)
         gro_atoms = gro_file.gro_atoms
         assert gro_file.sys_name == "MD of 2 waters, t= 0.0"
         assert gro_file.num_atoms == 6
@@ -123,16 +123,16 @@ def test_parse_gro_file():
             raise TypeError("gro_atoms is not a list")
 
 
-def test_parse_top_file():
+def test_Topology_parser():
     """
     Test case for parsing a GROMACS topology file.
     Currently only tested on Martini 2 topologies from the Charmmgui server.
     """
     input_file = "./tests/data/gmx/membrane-martini-charmmgui/system.top"
-    sys_top_cg = parse_top_file(input_file)
+    sys_top_cg = Topology.parser(input_file)
     assert sys_top_cg.system == "Martini system"
     input_file = "./tests/data/gmx/twolayer_include_itp/system.top"
-    sys_top = parse_top_file(input_file)
+    sys_top = Topology.parser(input_file)
     assert len(sys_top.include_itps) == 4
     sys_top.pull_forcefield()
     assert isinstance(sys_top.forcefield, MolForceField)

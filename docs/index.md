@@ -21,6 +21,8 @@
 is a lightweight Python package designed to access, validate and process file 
 or data used in various molecular simulation and modeling software.
 
+- Feature: __Pydantic Dataclasses__ to ensure data validation and type checking.
+  
 - Full code on [github](https://github.com/xinmengbcr/MolTopolParser).
 
 - [Installing](install.md) is simple: `pip install moltopolparser`
@@ -49,16 +51,44 @@ simulation tools and pipelines.
     There are other more suitable packages like:
     [Biopython ](https://biopython.org/), [MDAanalysis](https://www.mdanalysis.org/)..
 
-## Features
 
-- **Modular Design**: Each module corresponds to a specific software's file formats.
-- **Pydantic Dataclasses**: Ensures data validation and type checking.
-- **Class Methods for Parsing**: Includes parser functions as class methods for accessing and processing files.
-- **Exposed Modules and Dataclasses**: All modules and their contained dataclasses are accessible.
-  
-  
+## Example in Gromacs 
+
+
+```python
+import moltopolparser as mtp
+
+# Base data 
+atom_data = {
+        "id": 10,
+        "atom_type": "C",
+        "resnr": 100,
+        "residu": "UREA",
+        "atom": "C1",
+        "cgnr": 1,
+        "charge": -0.683,
+    }
+atom = mtp.gmx.MolTopAtom(**atom_data)
+print(atom.charge)
+
+# Parse gro file 
+gro_file = './tests/data/gmx/two_water.gro'
+gro = mtp.gmx.GroFile.parse(gro_file)
+print(gro.box_size)
+
+# Parse top file 
+
+
+
+
+# 
+```
+
+
+
+
+
 ## How does it work - Concepts
-
 
 <!-- 
 When front-end developers talk about code, it’s most often in the context of designing interfaces for the web. And the way we think of interface composition is in elements, like buttons, lists, navigation, and the likes. React provides an optimized and simplified way of expressing interfaces in these elements. It also helps build complex and tricky interfaces by organizing your interface into three key concepts— components, props, and state. -->
@@ -153,46 +183,6 @@ justs needs to think how to classify and organisig these components.
 MolTopolParser is designed with a composition focus and provides an easy way to organise, access, validate and
 manipulate these blocks of information. 
 
-
-
-
-<!-- 
-utilizing a three-level data abstraction model. 
-
-- Level 1: **Base Data**
-Classes at this level represent individual lines in a file.
-They focus on the smallest unit of data,
-providing direct mapping and validation for each line.
-
-- Level 2: **Aggregation Data** (or **Aggregation-File Data**)
-Classes at this level represent a whole section of lines,
-which could be stored in a standalone file.
-They group Base Data lines into meaningful sections for easier management and processing.
-
-- Level 3: **Summarization Data**
-Classes at this top level usually correspond to an entry or summary file.
-They gather all available data and provide access to the entire content.
-
-***Data Flow Logic***
-
-- **Data Declaration and Organization**: From top-down.
-- **Data Acquisition and Validation**: From bottom-up.
-
-The parsing occurs at their corresponding data levels:
-
-- **Summarization Level**: Acts as the entry point for the entire system/content.
-  It calls and organizes data from the aggregation level.
-- **Aggregation Level**: Handles the actual parsing. 
-  It functions like a component in a framework,
-  being called by the summarization level to parse and organize data.
-- **Base Data Level**: Corresponds to the most basic data records.
-
-Parser functions are included as class methods at the aggregation level,
-while the summarization level calls these methods to parse and organize data.
-Additionally, the aggregation level can include methods to convertor write out the data after parsing,
-once the data is organized.
-
-<!-- add an image file -->
 <div class="grid" markdown>
   ![Concepts Illustration](/img/illustration-components.pdf){ align=center style="width:900px"}
 </div>
@@ -222,12 +212,6 @@ They are organising all the `Aggregation` components together and provide access
 to users. 
 
 
-
-
-!!! Note 
-    - All the component classes are defined via `pydantic`, thus data validation is 
-      kept in mind all the time. 
-
 ### 3. Component Behaviour 
 
 The basic data flow logic follows: 
@@ -247,29 +231,6 @@ In our TOC model:
 after finishing simple parsing for *mandatory* properties, it will 
 return a component instance. :two: The instance can pass the `content` to classmethods at the **Aggregation** level 
 and delegate the parsing task. :three:  Similarly, the same logic happens in between  **Aggregation** and **Base** levels. 
-
-
-
-
-<!-- 
-```python
-import moltopolparser as mtp
-
-# Base data 
-atom_data = {
-        "id": 10,
-        "atom_type": "C",
-        "resnr": 100,
-        "residu": "UREA",
-        "atom": "C1",
-        "cgnr": 1,
-        "charge": -0.683,
-    }
-atom = mtp.gmx.MolTopAtom(**atom_data)
-print(atom.charge)
-
-``` -->
-
 
 
 
