@@ -1464,5 +1464,5 @@ def filter_comment(line: str) -> str:
 if __name__ == "__main__":
     print("run gmx directly")
     input_file = "../tests/data/gmx/twolayer_include_itp/system.top"
-    sys_top = parse_top_file(input_file)
+    sys_top = Topology.parser(input_file)
     demo, demo2 = sys_top.pull_forcefield()

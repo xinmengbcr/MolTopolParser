@@ -58,7 +58,7 @@ simulation tools and pipelines.
 ```python
 import moltopolparser as mtp
 
-# Base data 
+# ----------------------------- Base data direct validation
 atom_data = {
         "id": 10,
         "atom_type": "C",
@@ -71,35 +71,25 @@ atom_data = {
 atom = mtp.gmx.MolTopAtom(**atom_data)
 print(atom.charge)
 
-# Parse gro file 
+# -------------------------  Access via parsing a single file
 gro_file = './tests/data/gmx/two_water.gro'
 gro = mtp.gmx.GroFile.parse(gro_file)
 print(gro.box_size)
 
-# Parse top file 
 
+# ----------------------- Access via parsing top files, see example file below
+top_file = './tests/data/gmx/membrane-martini-charmmgui/system.top'
+sys_top = mtp.gmx.Topology.parser(top_file)
+print(sys_top.system)
 
+sys_top.pull_forcefield()
+print(sys_top.forcefield.atomtypes)
 
+sys_top.pull_molecule_topologies()
+print(sys_top.molecule_topologies)
 
-# 
 ```
 
-
-
-
-
-## How does it work - Concepts
-
-<!-- 
-When front-end developers talk about code, it’s most often in the context of designing interfaces for the web. And the way we think of interface composition is in elements, like buttons, lists, navigation, and the likes. React provides an optimized and simplified way of expressing interfaces in these elements. It also helps build complex and tricky interfaces by organizing your interface into three key concepts— components, props, and state. -->
-
-There could be various type of files involved in a molecular simulation project,
-for example in a molecular dynamics simulation project, there should be a coordinate
-file storing the atomic coordinates as the initial structure, a topology file contains
-system information, force field files storing the force field parameters, and so on.
-
-<!-- 
-Let's see one example of hierarchical structure formats from **Gromacs**. 
 !!! example "Example of Gromacs simulation"
     === "files"
         
@@ -170,7 +160,21 @@ Let's see one example of hierarchical structure formats from **Gromacs**.
         2  3  4 	2 	120.0 	25.0 	
         ...
         ```
- -->
+
+
+
+
+## How does it work - Concepts
+
+<!-- 
+When front-end developers talk about code, it’s most often in the context of designing interfaces for the web. And the way we think of interface composition is in elements, like buttons, lists, navigation, and the likes. React provides an optimized and simplified way of expressing interfaces in these elements. It also helps build complex and tricky interfaces by organizing your interface into three key concepts— components, props, and state. -->
+
+There could be various type of files involved in a molecular simulation project,
+for example in a molecular dynamics simulation project, there should be a coordinate
+file storing the atomic coordinates as the initial structure, a topology file contains
+system information, force field files storing the force field parameters, and so on.
+
+
 
 
 
