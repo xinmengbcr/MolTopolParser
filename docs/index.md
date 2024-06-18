@@ -231,39 +231,24 @@ to users.
 ### 3. Component Behaviour 
 
 The basic data flow logic follows: 
- 
-- **Declaration and Organization**: From top-down.
 
-- **Acquisition and Validation**: From bottom-up.
+  - **Declaration and Organization**: Top-Down.
+  - **Acquisition and Validation**: Bottom-Up.
 
-Data passing from top-down or Poperty passing from parent to child component is 
-a core concept in MolTopolParser. 
+When parsing happens, the top level always do *shallow* parsing,
+and pass the cotent to lower level's classmethod to do the *deep* parsing. 
+With such parsing tasks delegation, the top levels can more focus on 
+data organisation. 
+Such property passing from parent to child component is 
+vital in MolTopolParser. 
 
-Let's see when parsing occurs at their corresponding data levels:
-
-- **Summarization Level**: Acts as the entry point for the entire system/content.
-  It calls and organizes data from the aggregation level.
-- **Aggregation Level**: Handles the actual parsing. 
-  It functions like a component in a framework,
-  being called by the summarization level to parse and organize data.
-- **Base Data Level**: Corresponds to the most basic data records.
-
-Parser functions are included as class methods at the aggregation level,
-while the summarization level calls these methods to parse and organize data.
-Additionally, the aggregation level can include methods to convertor write out the data after parsing,
-once the data is organized.
+In our TOC model: 
+:one: **Summary** level's classmethod acts as the entry point for the entire `content`. 
+after finishing simple parsing for *mandatory* properties, it will 
+return a component instance. :two: The instance can pass the `content` to classmethods at the **Aggregation** level 
+and delegate the parsing task. :three:  Similarly, the same logic happens in between  **Aggregation** and **Base** levels. 
 
 
-
-
- <!-- tip "Think in React"
-    In essence, these level of abstraction can be all treated as __components__ in React's term. 
-    Thus these levels  intbeween are just parent components and child components.
-    Thus these are these data passing logic between parent and child components:  
-   `props` for passing data from parent to child
-  `state` for managing data in a component
-   `context` for passing data through the component tree without having to pass the props down manually at every level.
-  -->
 
 
 <!-- 
