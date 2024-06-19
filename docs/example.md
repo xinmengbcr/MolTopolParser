@@ -1,4 +1,0 @@
-# Example
-
-Gromacs files.
-

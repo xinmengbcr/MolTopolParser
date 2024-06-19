@@ -15,8 +15,8 @@ extra_css:
   
 nav:
   - Getting Started: index.md
-  - Install: install.md
-  - Example: example.md
+  - Concepts: concepts.md
+  - Developer's Guide: developer.md
 
 markdown_extensions:
   - admonition
