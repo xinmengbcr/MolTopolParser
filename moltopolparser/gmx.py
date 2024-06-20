@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 import re
 
-# -----------< Base Data >----------- #
+# -----------< Base >----------- #
 
 
 class GroAtom(BaseModel):

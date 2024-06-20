@@ -15,13 +15,12 @@
 ![Build Status](https://github.com/xinmengbcr/MolTopolParser/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/github/xinmengbcr/MolTopolParser/graph/badge.svg?token=9K93F2PXVW)](https://codecov.io/github/xinmengbcr/MolTopolParser)
 [![PyPI version](https://badge.fury.io/py/moltopolparser.svg)](https://badge.fury.io/py/moltopolparser)
+[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
 
 
 **MolTopolParser**, abbreviated for *Molecular Topology Parser*, 
 is a lightweight Python package designed to access, validate and process file 
 or data used in various molecular simulation and modeling software.
-
-- Feature: __Pydantic Dataclasses__ to ensure data validation and type checking.
   
 - Full code on [github](https://github.com/xinmengbcr/MolTopolParser).
 
@@ -174,9 +173,10 @@ print(sys_top.molecule_topologies[0])
 
 ## Contrubuting 
 
-Issues -->
+🚀  No support of your files? Pursuring of new features?
 
-concepts and how does it work -->
+👍 We'd love you to contribute to MolTopolParser ! 
 
-developer's guide 
+For beginner users, the easy way is just to directly submit an [issue request](https://github.com/xinmengbcr/MolTopolParser/issues).
+For develepors, you can read the [Concepts](concepts.md) follow our [Developer's Guidence](developer.md) to get started. 
 

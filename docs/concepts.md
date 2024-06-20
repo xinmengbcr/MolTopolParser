@@ -1,8 +1,5 @@
 # How does it work - Concepts
 
-<!-- 
-When front-end developers talk about code, it’s most often in the context of designing interfaces for the web. And the way we think of interface composition is in elements, like buttons, lists, navigation, and the likes. React provides an optimized and simplified way of expressing interfaces in these elements. It also helps build complex and tricky interfaces by organizing your interface into three key concepts— components, props, and state. -->
-
 There could be various type of files involved in a molecular simulation project,
 for example in a molecular dynamics simulation project, there should be a coordinate
 file storing the atomic coordinates as the initial structure, a topology file contains
@@ -76,7 +73,13 @@ and delegate the parsing task.
   - Such logic continues in between  **Aggregation** and **Base** levels. 
 
 --- 
-<!-- ADD the gromacs case  -->
+
+!!! note
+    Please continue to read the [Developer's Guidence](developer.md) for implementation detailed, where
+    we show the anatomy of the `gmx` module. 
+
 --- 
+
+
 
 
