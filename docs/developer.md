@@ -117,8 +117,10 @@ methods defined within the class. These methods typically follow the naming conv
 retrieve specific types of data or perform certain operations to organize and validate data:
 ```python
 # Example of accessing data using a method
-forcefield_data = system_topology.pull_forcefield()
-molecule_data = system_topology.pull_molecules()
+system_topology.pull_forcefield()
+system_topology.pull_molecules()
+forcefield_data = system_topology.forcefield
+molecules = system_topology.molecules
 ```
 
 ### Illustration 
