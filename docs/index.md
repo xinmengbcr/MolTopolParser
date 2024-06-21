@@ -108,10 +108,10 @@ print(sys_top.molecule_topologies[0])
 ## Contributing
 We encourage contributions from the community! Whether you are fixing bugs, proposing new features, or improving the documentation, your help is welcome.
 
-- For Beginners
+- **For Beginners** 
 Submit [issue requests](https://github.com/xinmengbcr/MolTopolParser/issues) for bugs or feature suggestions.
 
-- For Developers
+- **For Developers**
 Read the [Concepts](concepts.md) and follow our [Developer's Guidence](developer.md) to understand how to set up your environment and contribute code.
 
 
