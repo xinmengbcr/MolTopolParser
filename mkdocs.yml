@@ -12,6 +12,10 @@ theme:
     
    features:
       - content.code.annotate 
+      - navigation.tabs
+      - navigation.tabs.sticky
+      - toc.integrate 
+      - navigation.top
 
 extra_css:
   - css/custom.css
@@ -20,7 +24,9 @@ nav:
   - Getting Started: index.md
   - Concepts: concepts.md
   - Developer's Guide: developer.md
-
+  - Data Reference:
+      - gmx.MolTop: data_reference/gmx.MolTop.md
+  
 markdown_extensions:
   - admonition
   - pymdownx.details

@@ -71,7 +71,7 @@ class MolForceFieldDefaults(BaseModel):
         return "defaults"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> "MolForceFieldDefaults":
+    def parser(cls, content: List[str]) -> "MolForceFieldDefaults":
         """
         Parse the full content of the section [ defaults ].
         """
@@ -144,7 +144,7 @@ class MolForceFieldAtomtype(BaseModel):
         return "atomtypes"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolForceFieldAtomtype"]:
+    def parser(cls, content: List[str]) -> List["MolForceFieldAtomtype"]:
         """
         Parse the full content of the section [ atomtypes ].
         """
@@ -229,7 +229,7 @@ class MolForceFieldNonbondParam(BaseModel):
         return "nonbond_params"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolForceFieldNonbondParam"]:
+    def parser(cls, content: List[str]) -> List["MolForceFieldNonbondParam"]:
         """
         Parse the full content of the section [ nonbond_params ].
         """
@@ -301,7 +301,7 @@ class MolForceFieldBondtype(BaseModel):
         return "bondtypes"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolForceFieldBondtype"]:
+    def parser(cls, content: List[str]) -> List["MolForceFieldBondtype"]:
         """
         Parse the full content of the section [ bondtypes ].
         """
@@ -373,7 +373,7 @@ class MolForceFieldAngletype(BaseModel):
         return "angletypes"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolForceFieldAngletype"]:
+    def parser(cls, content: List[str]) -> List["MolForceFieldAngletype"]:
         """
         Parse the full content of the section [ angletypes ].
         """
@@ -513,7 +513,7 @@ class MolForceFieldDihedraltype(BaseModel):
         return "dihedraltypes"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolForceFieldDihedraltype"]:
+    def parser(cls, content: List[str]) -> List["MolForceFieldDihedraltype"]:
         """
         Parse the full content of the section
         """
@@ -599,7 +599,7 @@ class MolTopHeader(BaseModel):
         return "moleculetype"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> "MolTopHeader":
+    def parser(cls, content: List[str]) -> "MolTopHeader":
         """
         Parse section [ moleculetype ].
         """
@@ -649,7 +649,7 @@ class MolTopAtom(BaseModel):
         return "atoms"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolTopAtom"]:
+    def parser(cls, content: List[str]) -> List["MolTopAtom"]:
         """
         Parse the full content of the section [ atoms ].
         """
@@ -717,7 +717,7 @@ class MolTopBond(BaseModel):
         return "bonds"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolTopBond"]:
+    def parser(cls, content: List[str]) -> List["MolTopBond"]:
         """
         Parse the full content of the section [ bonds ].
         """
@@ -788,7 +788,7 @@ class MolTopPair(BaseModel):
         return "pairs"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolTopPair"]:
+    def parser(cls, content: List[str]) -> List["MolTopPair"]:
         """
         Parse the full content of the section [ pairs ].
         """
@@ -842,7 +842,7 @@ class MolTopAngle(BaseModel):
         return "angles"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolTopAngle"]:
+    def parser(cls, content: List[str]) -> List["MolTopAngle"]:
         """
         Parse the full content of the section [ angles ].
         """
@@ -938,7 +938,7 @@ class MolTopDihedral(BaseModel):
         return "dihedrals"
 
     @classmethod
-    def from_lines(cls, content: List[str]) -> List["MolTopDihedral"]:
+    def parser(cls, content: List[str]) -> List["MolTopDihedral"]:
         """
         Parse the full content of the section [ dihedrals ].
         """
@@ -1052,12 +1052,12 @@ class MolForceField(BaseModel):
         # contains the whole content of the force field
         ff_content = clean_lines(content_lines, content_files)
         # prepare attibutes
-        defaults = MolForceFieldDefaults.from_lines(ff_content)
-        atomtypes = MolForceFieldAtomtype.from_lines(ff_content)
-        nonbond_params = MolForceFieldNonbondParam.from_lines(ff_content)
-        bondtypes = MolForceFieldBondtype.from_lines(ff_content)
-        angletypes = MolForceFieldAngletype.from_lines(ff_content)
-        dihedraltypes = MolForceFieldDihedraltype.from_lines(ff_content)
+        defaults = MolForceFieldDefaults.parser(ff_content)
+        atomtypes = MolForceFieldAtomtype.parser(ff_content)
+        nonbond_params = MolForceFieldNonbondParam.parser(ff_content)
+        bondtypes = MolForceFieldBondtype.parser(ff_content)
+        angletypes = MolForceFieldAngletype.parser(ff_content)
+        dihedraltypes = MolForceFieldDihedraltype.parser(ff_content)
 
         data = {
             "defaults": defaults,
@@ -1073,7 +1073,7 @@ class MolForceField(BaseModel):
 class MolTop(BaseModel):
     """[ moleculetype ] section .
     example data posted at link:
-    https://github.com/xinmengbcr/MolTopolParser/wiki/Data-Format-%E2%80%90-GMX-%E2%80%90-Molecule-Topology-Definition
+    /docs/data_reference/gmx_molecule_topology.md
     """
 
     # molecule_type is a dictionary with the molecule name and nrexcl
@@ -1130,12 +1130,12 @@ class MolTop(BaseModel):
                 mt_section = mt_content[start:]
 
             # normal parsing of the molecule type
-            header = MolTopHeader.from_lines(mt_section)
-            atoms = MolTopAtom.from_lines(mt_section)
-            bonds = MolTopBond.from_lines(mt_section)
-            angles = MolTopAngle.from_lines(mt_section)
-            pairs = MolTopPair.from_lines(mt_section)
-            dihedrals = MolTopDihedral.from_lines(mt_section)
+            header = MolTopHeader.parser(mt_section)
+            atoms = MolTopAtom.parser(mt_section)
+            bonds = MolTopBond.parser(mt_section)
+            angles = MolTopAngle.parser(mt_section)
+            pairs = MolTopPair.parser(mt_section)
+            dihedrals = MolTopDihedral.parser(mt_section)
 
             data = {
                 "header": header,
