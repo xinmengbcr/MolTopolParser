@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://moltopolparser.bocores.com/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://moltopolparser.bocores.com/concepts/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://moltopolparser.bocores.com/developer/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://moltopolparser.bocores.com/install/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://moltopolparser.bocores.com/reference/gmx.MolTop/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+</urlset>
