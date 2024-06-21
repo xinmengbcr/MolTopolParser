@@ -7,10 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
-- Clear three level data in module `gmx`
+- ...
 
 ### Fixed
-- Fixed a bug where ...
+- ...
+
+## [0.0.1a3] - 2024-06-21
+
+### Fixed
+- updating docs and README.MD 
 
 ## [0.0.1a2] - 2024-06-18
 
