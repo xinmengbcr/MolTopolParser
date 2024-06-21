@@ -1,9 +1,16 @@
 # How does it work - Concepts
 
-There could be various type of files involved in a molecular simulation project,
-for example in a molecular dynamics simulation project, there should be a coordinate
-file storing the atomic coordinates as the initial structure, a topology file contains
-system information, force field files storing the force field parameters, and so on.
+Understanding the underlying principles and architecture of MolTopolParser is essential for both using and contributing to the package. This section explains the types of files involved in molecular simulation projects, the design principles of MolTopolParser, and the data abstraction model it uses.
+
+
+In molecular dynamics simulations, several types of files are typically used, each serving a specific purpose:
+
+- **Coordinate Files**: Store the initial atomic or molecular coordinates that define the structure of the system.
+
+- **Topology Files**: Contain detailed system information, including the types of particles and their interactions.
+
+- **Force Field Files**: Define the forces applied to the particles in the system, specifying parameters such as bond lengths, angles, and torsional angles.
+These files are critical for setting up and running molecular simulations accurately.
 
 
 <div class="grid" markdown>
@@ -12,74 +19,47 @@ system information, force field files storing the force field parameters, and so
 
 
 
-## 1. Components and Composition
+## Components and Composition
 
-An effcient way to think of all the files as composition of blocks of well-defined information.
-__Taking the concept in React__, a meaningful block can be defined in to a __component__. Then a developer 
-justs needs to think how to classify and organisig these components.
+An efficient way to think of all the files is as a composition of blocks of well-defined information.
+Similar to the concept in React, a meaningful block can be defined into a component. 
+Then, a developer just needs to classify and organize these components.
 
-MolTopolParser is designed with a composition focus and provides an easy way to organise, access, validate and
-manipulate these blocks of information. 
+MolTopolParser is designed with a composition focus, providing an easy way to organize, access, 
+validate, and manipulate these blocks of information.
 
+## Three-Order Component Model (TOC)
 
+The TOC model simplifies data handling by categorizing data into three hierarchical levels:
 
-## 2. Three Order Component Model 
-
-MolTopolParser utilizes a Three Order Component (TOC) data abstraction model.
-It covers a basic hierachy data structure, and avoids uncessary layers. 
-Although there is no limiation when going to higher ordres of hierachy. 
-Likley, when using this tool for further developing, higher orders will be revolked. 
-
-- Level 1: **Base**
-Classes defined at this level represent individual lines. They
-focus on the smallest unit of data, providing
-direct mapping and validation for each line.
-
-- Level 2: **Aggregation**
-Classes at this level represent whole sections of lines, 
-which could be stored in a standalone file.
-They group `Base` components 
-into meaningful sections for easier management and processing.
-
-- Level 3: **Summary**
-Classes at this top level usually correspond to an entry or summary file.
-They are organising all the `Aggregation` components together and provide access to the entire content
-to users. 
+- **Level 1: Base Classes** - These classes map directly to individual data entries, such as a single atom or bond. They provide immediate validation and data encapsulation.
+- **Level 2: Aggregation Classes** - These classes manage groups of base components, such as all atoms in a molecule or all molecules in a system, facilitating operations on collections of components.
+- **Level 3: Summary Classes** - At the highest level, these classes provide a summary or an overview of entire datasets or simulation setups, integrating multiple aggregation classes.
 
 
-## 3. Component Behaviour 
 
-The basic data flow logic follows: 
+## Component Behaviour 
 
-  - **Declaration and Organization**: Top-Down.
-  - **Acquisition and Validation**: Bottom-Up.
+MolTopolParser operates on a clear data flow principle:
 
-When parsing happens, the top level always do *shallow* parsing,
-and pass the cotent to lower level's classmethod to do the *deep* parsing. 
-With such parsing tasks delegation, the top levels can more focus on 
-data organisation. 
-Such property passing from parent to child component is 
-vital in MolTopolParser. 
+  - **Declaration and Organization**: Data structures are defined and organized from the top down, starting with the most comprehensive views
+  
+  - **Acquisition and Validation**: Data is parsed and validated from the bottom up, ensuring integrity at each step of the data structure
 
-In the TOC model:
+## Parsing Mechanism
 
-  - **Summary** level's classmethod acts as the entry point for the entire `content`. 
-after finishing simple parsing for *mandatory* properties, it will 
-return a component instance. 
+When parsing data:
 
-  - The instance can pass the `content` to classmethods at the **Aggregation** level 
-and delegate the parsing task. 
-
-  - Such logic continues in between  **Aggregation** and **Base** levels. 
-
---- 
-
-!!! note
-    Please continue to read the [Developer's Guidence](developer.md) for implementation detailed, where
-    we show the anatomy of the `gmx` module. 
-
---- 
+- **Shallow Parsing**: Top-level components perform shallow parsing to recognize data structures without delving into details.
+  
+- **Deep Parsing**: Detailed parsing tasks are delegated to lower levels, allowing higher-level components to remain abstract and focused on structure.
+This method of delegation ensures efficiency and maintains clarity in data handling, avoiding redundancy and confusion in complex datasets.
 
 
+## Further Reading
+
+To understand how these concepts are implemented in MolTopolParser, please refer to the [Developer's Guidence](developer.md). This guide includes detailed examples and explanations of each component level and offers insight into extending MolTopolParser's capabilities.
+
+---
 
 

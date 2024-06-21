@@ -1,68 +1,137 @@
 # Developer's Guide
 
+Welcome to the MolTopolParser developer's guide. 
+This guide provides all the necessary information for setting up your development environment,
+understanding the codebase, and contributing effectively to the project.
 
-!!! success "environment setup"
+## Environment Setup
 
-    ```bash
-    # clone the repository 
-    cd MolTopolParser
-    python -m venv .venv 
-    source .venv/bin/activate
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    pip install -e .
-    # run test
-    pytest tests/test_xxx.py -v -s
-    ```
+### Clone the Repository
 
+Start by cloning the MolTopolParser repository to your local machine:
 
+```bash
+git clone https://github.com/your-username/MolTopolParser.git
+cd MolTopolParser
+```
 
-## Basic
+### Create a Virtual Environment
+It's recommended to create a virtual environment for development to manage dependencies cleanly:
+```bash 
+python -m venv .venv
+source .venv/bin/activate
+```
+### Install Dependencies
+Install all required dependencies using pip:
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+```
 
-Let's assume a new module `xxx` is going to be implememted to support a software in mind.
+### Run Tests
+Ensure that all tests pass to verify your setup:
+```bash
+pytest tests -v -s
+```
+
+## Developing a New Module
+
+If you are adding a new module to support a different simulation software, here's how to get started:
 
 ### Add a module file 
 
-💡 In the `version 1` implementation, for simplicity, a module corresponds to a single `py` file. 
+1.  **Create a new file** under the `moltopolparser` directory for your module, e.g., `xxx.py`.
+2.  **Register the new module** in the `__init__.py` file:
 
-Inside the `MolTopolParser/moltopolparser` folder, a new file `xxx.py` should be created.
-This module's info is also be registered in the `__init__.py` file, as shown via the `cat` below.
-
-
-``` bash 
-$ tree moltopolparser
-
-moltopolparser
-├── __init__.py
-└── gmx.py
-└── xxx.py  # <-
-
-$ cat __init__.py
-
-from . import gmx 
-from . import xxx # <-
-
-__all__ = ["gmx", "xxx"] # <-
+```python
+from . import xxx
+__all__ = ['gmx', 'xxx']
 ```
 
-### Add testing file 
-
-Inside the `MolTopolParser/tests` folder, a new file `test_xxx.py` should be created.
-When file `data` is necessary, the files should be allocted in a folder `MolTopolParser/tests/data/xxx`.
 
 
-### Outline of a module file
+### Define Data Classes
 
-There are five following sections in a module file:
+Organize your module using the Three-Order Component (TOC) model:
 
-- **Header and Imports** 🔥 If new packages need to be installed, 🚀 please also update the requirments in `setup.py` and `requirements.txt`
-- **Level 1** Base dataclasses
-- **Level 2**:  Aggregation dataclasses
-- **Level 3**: Summary dataclasse(s)
-- Helper functions
+1. **Level 1 Base Data Classes** - Define data classes for the smallest data units.
+2. **Level 2 Aggregation Classes** - Group base classes into meaningful sections.
+3. **Level 3 Summary Classes** - Organize and manage entire file contents or complex data structures.
 
+### Implement Parsing Functions
 
-!!! quote "Five Sections"
+Add class methods for parsing data, validating, and possibly manipulating or transforming data.
+
+### Testing Your Module
+Create a testing file in the `tests` directory:
+
+1. Structure: Place your test file, e.g., `test_xxx.py`.
+2. Data Files: Store necessary data files under `tests/data/xxx/` for use in tests.
+
+### Example Code Block
+Here’s a simplified structure of what your module file might look like:
+
+```python
+# Header and Imports
+"""
+Module to parse and manage data from Software XXX
+"""
+import necessary_libraries # (1)
+
+# Base dataclasses
+class BaseClass:
+    pass
+
+# Aggregation dataclasses
+class AggregateClass:
+    pass
+
+# Summary dataclasses
+class SummaryClass:
+    pass
+
+# Additional helper functions if needed
+```
+
+1. If new packages need to be installed, please also update the `setup.py` and `requirements.txt` files 
+
+## Understanding Data Access and Manipulation
+
+MolTopolParser simplifies the process of working with molecular simulation files by providing structured data access 
+through its class hierarchy. The process typically begins with the initialization of a top-level data class, 
+which acts as a gateway to all underlying data associated with a simulation.
+
+### Top-Level Dataclass Initialization
+When you initialize the top-level dataclass, it constructs an instance that encapsulates all the necessary information
+of the system and its related contents from the target files. 
+This encapsulation allows for a structured and organized approach to accessing and manipulating the data:
+
+```python
+# Example of initializing a top-level dataclass
+system_topology = SystemTopology(parser="path/to/topology_file.top")
+```
+### Accessing Data
+Once the top-level class is initialized, specific data can be accessed by invoking corresponding 
+methods defined within the class. These methods typically follow the naming convention `pull_*` to indicate that they 
+retrieve specific types of data or perform certain operations to organize and validate data:
+```python
+# Example of accessing data using a method
+forcefield_data = system_topology.pull_forcefield()
+molecule_data = system_topology.pull_molecules()
+```
+
+### Illustration 
+
+The following figure demonstrates the Initialization and Access Procoesses based on a toy module file. 
+
+<div class="grid" markdown>
+  ![Data-flow Illustration](/img/illustration-flow.pdf){align='center' style="width:600px"}
+</div> 
+
+Here’s the toy module file:
+
+!!! quote "Five Sections in a toye module file"
     
     === "Header and Imports"
         ```py 
@@ -73,8 +142,6 @@ There are five following sections in a module file:
         #####  Import replying modules
         import ... 
         ```
-        
-
 
     === "Level 1: Base dataclasses"
         ```py
@@ -165,24 +232,6 @@ There are five following sections in a module file:
         ### deployed to filter out commnets in content, 
         ### to locate range of data need to be passed. 
         ```
-    
-
-The naming in the dataclasses are just made for demonstration. 
-It is recommended to adpate the names that is more convinient and meaningful for the target. 
-
-
-### Demo of the data flow
-
-The usage usully starts with initializaiton of the Top level dataclass. 
-The returned top-level dataclass intance contains the necessary information of system's and 
-content that is included in the whole target files. 
-To acess specific data, we just need to call the corresponding methods, e.g. `pull_*`. 
-
-The following figure demonstrates the logic behind such operations. 
-<div class="grid" markdown>
-  ![Data-flow Illustration](/img/illustration-flow.pdf){align='center' style="width:500px "}
-</div> 
-
 
 ## Practice with gmx.py 
 
@@ -191,98 +240,58 @@ Via reading the code, all the concepts should be clarified.
 
 It is also recommended to copy the `gmx.py` to start a new module. 
 
-Here is some demo of `gromacs` files that the module processes.
+
+## Submitting Contributions
+
+### Pull Requests
+
+1. **Fork the repository** - Make a copy of the project on your GitHub account.
+2. **Make your changes** - Work on your fork and make the changes you propose.
+3. **Submit a pull request** - Open a pull request from your fork back to the main repository.
+
+### Code Style and Review
+Follow PEP 8 guidelines for Python code. Ensure your code is clean and well-documented.
+All contributions will undergo a review process by core maintainers.
 
 
-!!! quote "Example of Gromacs files"
-    === "files"
-        
-        ```bash 
-        $ tree membrane-martini-charmmgui/
-        membrane-martini-charmmgui/
-        ├── step5_charmm2gmx.pdb
-        ├── system.top
-        └── toppar
-            ├── martini_v2.0_lipids_all_201506.itp
-            └── martini_v2.2.itp
-        ```
-    === "system.top  'entry file'"
-        ```text
-        #include "toppar/martini_v2.2.itp"
-        #include "toppar/martini_v2.0_lipids_all_201506.itp"
-        #include "toppar/martini_v2.0_ions.itp"
-
-        [ system ]
-        Martini system
-
-        [ molecules ]
-        DOPC 2
-        ...
-        CL 9
-        ```
-
-    === "martini_v2.2.itp 'content file' "
-        ```text
-        [ defaults ]
-        1 1
-
-        [ atomtypes ]
-        P5 72.0 0.000 A 0.0 0.0
-        ...
-        
-        [ nonbond_params ]
-        ; i j	funda c6 c12 
-        P5 	    5 	    1 	0.24145E-00 	0.26027E-02 ; supra attractive
-        ...
-        
-        [ moleculetype ]
-        ; molname  	nrexcl
-        W 	    	1
-
-        [ atoms ]
-        ;id 	type 	resnr 	residu 	atom 	cgnr 	charge
-        1 	P4 	1 	W 	W 	1 	0 
-        ...
-        ```
-    === "martini_v2.0_lipids_all_201506.itp 'content file'"
-        ```text
-        [moleculetype]
-        ; molname      nrexcl
-        DAPC          1
-
-        [atoms]
-        ; id 	type 	resnr 	residu 	atom 	cgnr 	charge
-        1 	Q0 	 1 	DAPC 	NC3 	 1 	1.0 	
-        2 	Qa 	 1 	DAPC 	PO4 	 2 	-1.0 	
-        ...
-        [bonds]
-        ;  i  j 	funct 	length 	force.c.
-        1  2 	1 	0.47 	1250 
-        ...
-        [angles]
-        ;  i  j  k 	funct 	angle 	force.c.
-        2  3  4 	2 	120.0 	25.0 	
-        ...
-        ```
 
 ## Attention
 
-- In the early verisons, all the dataclasses are directly inherating from `pydantic.BaseModel`.
-We have not given *templated* dataclasses for each level, and there is some redundence could be reduced. 
-Please submit an [issue request](https://github.com/xinmengbcr/MolTopolParser/issues) or implement directly if you want this to be improved.  
+### Early Version Data Structure Improvements
 
-- API documentation is not made yet. If documentation of data formats needed, the corresponding `.md` file, e.g. `xxx_yyy.md` can put in the 
-documentation folder `docs/data_reference` and add the record in the `mkdocs.yml` file. Run the following cmd to render the cocumentation: ```bash mkdocs serve```.
+In the initial versions of MolTopolParser, all data classes inherit directly from `pydantic.BaseModel`. 
+This implementation did not utilize *templated* data classes for each hierarchical level, 
+leading to some redundancy that could be streamlined to enhance the package's efficiency and maintainability. 
+If you encounter issues or have suggestions for improvements,
+please do not hesitate to submit an [issue request]((https://github.com/xinmengbcr/MolTopolParser/issues))
+or contribute directly by implementing enhancements.
 
-    !!! quote "example of modification in mkdocs.yml file"
-        ```yml
-        nav:
-        - Getting Started: index.md
-        - Concepts: concepts.md
-        - Developer's Guide: developer.md
-        - Data Reference:
-            - gmx.MolTop: data_reference/gmx.MolTop.md
-            - Name_eg_xxx.yyy: data_reference/xxx_yyy.md #<------ here 
-        ```
+### API Documentation
+As of now, comprehensive API documentation has not been established for MolTopolParser.
+For users requiring documentation of specific data formats, 
+it is advised to create a markdown file, such as `xxx_yyy.md`, detailing the data structure and its usage. 
+Place this file in the `docs/reference` directory.
+To update the documentation site with this new information, 
+add an entry to the `mkdocs.yml` file under the `Reference` section and use the `mkdocs serve` 
+command to generate and view the documentation locally.
 
-- Submit an [issue request](https://github.com/xinmengbcr/MolTopolParser/issues) is always welcome 🚀
+Example modification in `mkdocs.yml` file:
+
+``` yml
+nav:
+  - Getting Started: index.md
+  - Concepts: concepts.md
+  - Developer's Guide: developer.md
+  - Reference:
+      - gmx.MolTop: reference/gmx.MolTop.md
+      - Name_eg_xxx.yyy: reference/xxx_yyy.md #<------ here 
+```
+Run the following command to render the documentation:
+
+``` bash
+mkdocs serve
+```
+
+## Need Help?
+If you encounter any problems or have questions while contributing,
+please [open an issue](https://github.com/xinmengbcr/MolTopolParser/issues) on the GitHub repository.

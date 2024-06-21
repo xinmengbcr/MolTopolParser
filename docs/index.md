@@ -120,3 +120,5 @@ For details on the latest changes and version history, please refer to the full 
 
 ## License
 MolTopolParser is released under the Apache License. See the [LICENSE](https://github.com/xinmengbcr/MolTopolParser/blob/main/LICENSE) file for more details.
+
+---

@@ -24,8 +24,8 @@ nav:
   - Getting Started: index.md
   - Concepts: concepts.md
   - Developer's Guide: developer.md
-  - Data Reference:
-      - gmx.MolTop: data_reference/gmx.MolTop.md
+  - Reference:
+      - gmx.MolTop: reference/gmx.MolTop.md
   
 markdown_extensions:
   - admonition
