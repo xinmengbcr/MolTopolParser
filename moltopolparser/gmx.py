@@ -760,11 +760,9 @@ class MolTopBond(BaseModel):
             else:
                 raise ValueError("The bond line is not formatted correctly.")
 
-            if data is not None:
-                instance_list.append(cls(**data))
-                return instance_list
-            else:
-                return None
+            instance_list.append(cls(**data))
+
+        return instance_list
 
 
 class MolTopPair(BaseModel):
