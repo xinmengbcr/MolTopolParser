@@ -264,6 +264,27 @@ def test_MolTopDihedral():
     assert dihedral.al == 41
     assert dihedral.func == 1
 
+    # func 11 (combined bending-torsion / CBT): carries a0..a4 = c0..c4 (no c5)
+    example_data_cbt = {
+        "ai": 1,
+        "aj": 2,
+        "ak": 3,
+        "al": 4,
+        "func": 11,
+        "c0": 10.0,
+        "c1": 5.0,
+        "c2": 2.0,
+        "c3": 1.0,
+        "c4": 0.5,
+    }
+    dihedral = MolTopDihedral(**example_data_cbt)
+    assert dihedral.func == 11
+    assert dihedral.c3 == 1.0
+    assert dihedral.c4 == 0.5
+    assert dihedral.c5 is None
+    with pytest.raises(ValidationError):  # c5 is not allowed for func 11
+        MolTopDihedral(**{**example_data_cbt, "c5": 0.1})
+
     example_data_improper = {
         "ai": 10,
         "aj": 21,

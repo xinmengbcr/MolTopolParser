@@ -7,7 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
-- ...
+- `MolTopDihedral`: parse combined bending-torsion (CBT, GROMACS func 11) dihedrals — 10-column
+  `[ dihedrals ]` lines now map `a0..a4` to `c0..c4` (previously silently dropped), and the model
+  validator allows `c3`/`c4` for func 11.
 
 ### Fixed
 - ...

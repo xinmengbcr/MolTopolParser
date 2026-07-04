@@ -905,12 +905,14 @@ class MolTopDihedral(BaseModel):
     @model_validator(mode="before")
     def check_func_and_coefficients(cls, values):
         func = values.get("func")
-        if func not in (3, 5):
-            for field in ["c3", "c4", "c5"]:
-                if values.get(field) is not None:
-                    raise ValueError(
-                        f"{field} can only have a value if func is 3 or 5."
-                    )
+        # func 3 (Ryckaert-Bellemans) and 5 (Fourier) carry c0..c5; func 11 (combined
+        # bending-torsion) carries a0..a4 = c0..c4 (no c5). All other funcs use at most c0..c2.
+        allowed = {"c3", "c4", "c5"} if func in (3, 5) else ({"c3", "c4"} if func == 11 else set())
+        for field in ("c3", "c4", "c5"):
+            if field not in allowed and values.get(field) is not None:
+                raise ValueError(
+                    f"{field} can only have a value if func is 3 or 5 (c3-c5), or 11 (c3-c4)."
+                )
         return values
 
     model_config = ConfigDict(
@@ -990,6 +992,21 @@ class MolTopDihedral(BaseModel):
                         "c3": float(parts[8]),
                         "c4": float(parts[9]),
                         "c5": float(parts[10]),
+                    }
+                elif len(parts) == 10:
+                    # func 11 (combined bending-torsion): a0..a4 -> c0..c4
+                    data = {
+                        "ai": int(parts[0]),
+                        "aj": int(parts[1]),
+                        "ak": int(parts[2]),
+                        "al": int(parts[3]),
+                        "func": int(parts[4]),
+                        "c0": float(parts[5]),
+                        "c1": float(parts[6]),
+                        "c2": float(parts[7]),
+                        "c3": float(parts[8]),
+                        "c4": float(parts[9]),
+                        "c5": None,
                     }
                 else:
                     # print("Warning: c0 to c5 are not provided")
